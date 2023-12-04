@@ -29,7 +29,10 @@ func NewError(msg string, err error) *AppError {
 
 func ParseHTTPErrStatusCode(err error) int {
 	switch {
-
+	case errors.Is(err, ErrUniqueViolation):
+		return http.StatusBadRequest
+	case errors.Is(err, ErrForeignKeyViolation):
+		return http.StatusBadRequest
 	}
 
 	return http.StatusInternalServerError
