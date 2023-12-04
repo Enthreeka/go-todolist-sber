@@ -11,11 +11,10 @@ create table if not exists task(
     id_user uuid,
     header varchar(150) not null,
     description text not null ,
-    created_at timestamp not null,
+    created_at timestamp default current_timestamp not null,
     start_date timestamp not null,
     done bool default false,
     primary key (id),
     foreign key (id_user)
             references "user" (id) on delete cascade
 );
-
