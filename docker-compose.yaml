@@ -1,0 +1,29 @@
+version: '3.1'
+
+services:
+  app:
+    container_name: app
+    build: ./
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15.2
+    restart: always
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./migration/up:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=todolist
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
