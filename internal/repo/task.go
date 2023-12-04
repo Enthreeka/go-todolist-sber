@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/pkg/postgres"
 	"strings"
@@ -24,6 +25,13 @@ func (t *taskRepository) collectRow(row pgx.Row) (*entity.Task, error) {
 	err := row.Scan(&task.ID, &task.UserID, &task.Header, &task.Description, &task.CreatedAt, &task.StartDate, &task.Done)
 	if err == pgx.ErrNoRows {
 		return nil, err
+	}
+	errCode := ErrorCode(err)
+	if errCode == ForeignKeyViolation {
+		return nil, apperror.ErrForeignKeyViolation
+	}
+	if errCode == UniqueViolation {
+		return nil, apperror.ErrUniqueViolation
 	}
 
 	return &task, err
