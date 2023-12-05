@@ -16,6 +16,9 @@ var (
 	ErrForeignKeyViolation = NewError("Foreign Key Violation", errors.New("foreign_key_violation "))
 	ErrNoRows              = NewError("No rows in result set", errors.New("no_rows"))
 	ErrNotFound            = NewError("Tasks not found", errors.New("not_found"))
+
+	ErrHashPasswordsNotEqual = NewError("Invalid password", errors.New("hashes_not_equal"))
+	ErrDataNotValid          = NewError("Provided data is not valid", errors.New("not_valid"))
 )
 
 func (a *AppError) Error() string {
@@ -37,6 +40,10 @@ func ParseHTTPErrStatusCode(err error) int {
 		return http.StatusBadRequest
 	case errors.Is(err, ErrNoRows):
 		return http.StatusNotFound
+	case errors.Is(err, ErrHashPasswordsNotEqual):
+		return http.StatusForbidden
+	case errors.Is(err, ErrDataNotValid):
+		return http.StatusUnprocessableEntity
 	}
 
 	return http.StatusInternalServerError
