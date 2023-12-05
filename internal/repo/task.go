@@ -54,21 +54,21 @@ func (t *taskRepository) Update(ctx context.Context, task *entity.Task) (*entity
 	if task.Header != "" {
 		increment++
 		attribute = append(attribute, task.Header)
-		builder.WriteString(fmt.Sprintf(`header = %d `, increment))
+		builder.WriteString(fmt.Sprintf(`header = $%d `, increment))
 	}
 	if task.Description != "" {
 		increment++
 		attribute = append(attribute, task.Description)
-		builder.WriteString(fmt.Sprintf(`description = %d `, increment))
+		builder.WriteString(fmt.Sprintf(`,description = $%d `, increment))
 	}
 	if !task.StartDate.IsZero() {
 		increment++
 		attribute = append(attribute, task.StartDate)
-		builder.WriteString(fmt.Sprintf(`created_at = %d `, increment))
+		builder.WriteString(fmt.Sprintf(`,created_at = $%d `, increment))
 	}
 	increment++
-	builder.WriteString(fmt.Sprintf(`where id = %d returning *`, increment))
-
+	builder.WriteString(fmt.Sprintf(`where id = $%d returning *`, increment))
+	attribute = append(attribute, task.ID)
 	row := t.Pool.QueryRow(ctx, builder.String(), attribute...)
 
 	return t.collectRow(row)

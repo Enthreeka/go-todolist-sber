@@ -25,11 +25,12 @@ func (t *taskUsecase) CreateTask(ctx context.Context, task *entity.Task) (*entit
 	return task, nil
 }
 
-func (t *taskUsecase) UpdateTask(ctx context.Context, task *entity.Task) error {
-	if _, err := t.taskRepo.Update(ctx, task); err != nil {
-		return err
+func (t *taskUsecase) UpdateTask(ctx context.Context, task *entity.Task) (*entity.Task, error) {
+	task, err := t.taskRepo.Update(ctx, task)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	return task, nil
 }
 
 func (t *taskUsecase) DeleteTask(ctx context.Context, id int) error {

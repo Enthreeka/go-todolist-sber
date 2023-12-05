@@ -19,3 +19,4 @@ create table if not exists task(
             references "user" (id) on delete cascade
 );
 
+update task set header = 'Second header' ,description = 'First description' where id = 5 returning *;

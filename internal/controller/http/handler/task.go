@@ -27,6 +27,7 @@ type TaskRequest struct {
 	Header      string `json:"header"`
 	Description string `json:"description"`
 	StartDate   string `json:"start_date"`
+	ID          int    `json:"id"`
 }
 
 func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +101,45 @@ func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
+	data := new(TaskRequest)
+	d := json.NewDecoder(r.Body)
+	err := d.Decode(&data)
+	if err != nil {
+		t.log.Error("json.NewDecoder: %v", err)
+		DecodingError(w)
+		return
+	}
+
+	var parsedTime time.Time
+	if data.StartDate != "" {
+		parsedTime, err = time.Parse("02.01.2006 15:04", data.StartDate)
+		if err != nil {
+			t.log.Error("time.Parse: %v", err)
+			ParseTimeError(w)
+			return
+		}
+	}
+
+	task := &entity.Task{
+		Header:      data.Header,
+		Description: data.Description,
+		StartDate:   parsedTime,
+		ID:          data.ID,
+		UserID:      "53153c2c-1c10-4b92-b5ff-0cf67b116654",
+	}
+	updatedTask, err := t.taskUsecase.UpdateTask(context.Background(), task)
+	if err != nil {
+		t.log.Error("taskUsecase.UpdateTask: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	e := json.NewEncoder(w)
+	e.Encode(updatedTask)
 }
 
 func getID(ctx context.Context) string {
