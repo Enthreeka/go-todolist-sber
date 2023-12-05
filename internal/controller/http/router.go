@@ -20,6 +20,7 @@ func Router(log *logger.Logger, service Services) *chi.Mux {
 		r.Route("/task", func(r chi.Router) {
 			r.Get("/list", task.GetTaskHandler)
 			r.Post("/add", task.CreateTaskHandler)
+			r.Delete("/delete", task.DeleteTaskHandler)
 		})
 	})
 

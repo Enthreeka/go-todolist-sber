@@ -81,6 +81,27 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 	e.Encode(createdTask)
 }
 
+func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		ID int `json:"id"`
+	}
+	d := json.NewDecoder(r.Body)
+	err := d.Decode(&data)
+	if err != nil {
+		t.log.Error("json.NewDecoder: %v", err)
+		DecodingError(w)
+		return
+	}
+
+	if err := t.taskUsecase.DeleteTask(context.Background(), data.ID); err != nil {
+		t.log.Error("taskUsecase.DeleteTask: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func getID(ctx context.Context) string {
 	userID, _ := ctx.Value("userID").(string)
 
