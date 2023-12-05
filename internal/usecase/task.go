@@ -17,11 +17,12 @@ func NewTaskUsecase(taskRepo repo.Task) Task {
 	}
 }
 
-func (t *taskUsecase) CreateTask(ctx context.Context, task *entity.Task) error {
-	if _, err := t.taskRepo.Create(ctx, task); err != nil {
-		return err
+func (t *taskUsecase) CreateTask(ctx context.Context, task *entity.Task) (*entity.Task, error) {
+	task, err := t.taskRepo.Create(ctx, task)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	return task, nil
 }
 
 func (t *taskUsecase) UpdateTask(ctx context.Context, task *entity.Task) error {

@@ -19,6 +19,7 @@ func Router(log *logger.Logger, service Services) *chi.Mux {
 	mux.Route("/", func(r chi.Router) {
 		r.Route("/task", func(r chi.Router) {
 			r.Get("/list", task.GetTaskHandler)
+			r.Post("/add", task.CreateTaskHandler)
 		})
 	})
 
