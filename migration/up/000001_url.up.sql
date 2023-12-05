@@ -2,7 +2,8 @@ create extension if not exists "uuid-ossp";
 
 create table if not exists "user"(
     id uuid DEFAULT uuid_generate_v4(),
-    login varchar(100) unique,
+    login varchar(100) unique not null,
+    password varchar(100) unique not null,
     primary key (id)
 );
 
@@ -18,8 +19,3 @@ create table if not exists task(
     foreign key (id_user)
             references "user" (id) on delete cascade
 );
-
-update task set header = 'Second header' ,description = 'First description' where id = 5 returning *;
-
-select * from task where id_user = '53153c2c-1c10-4b92-b5ff-0cf67b116654';
-    
