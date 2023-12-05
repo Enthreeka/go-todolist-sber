@@ -8,6 +8,7 @@ import (
 	"go-todolist-sber/internal/usecase"
 	"go-todolist-sber/pkg/logger"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -147,6 +148,34 @@ func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		t.log.Error("taskUsecase.GetAllTasks: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	e := json.NewEncoder(w)
+	e.Encode(tasks)
+}
+
+//localhost:8080/task/pagination?page=3&status=false
+func (t *taskHandler) GetTaskWithPagination(w http.ResponseWriter, r *http.Request) {
+	page, errPage := strconv.Atoi(r.URL.Query().Get("page"))
+	status, errStatus := strconv.ParseBool(r.URL.Query().Get("status"))
+	if errPage != nil || errStatus != nil {
+		t.log.Error("Empty query result")
+		QueryError(w)
+		return
+	}
+
+	tasks, err := t.taskUsecase.PaginationTasks(context.Background(), "53153c2c-1c10-4b92-b5ff-0cf67b116654", status, page)
+	if err != nil {
+		t.log.Error("taskUsecase.PaginationTasks: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	if len(tasks) == 0 {
+		t.log.Error("tasks = 0")
+		HandleError(w, apperror.ErrNotFound, http.StatusNotFound)
 		return
 	}
 

@@ -109,3 +109,18 @@ func (t *taskRepository) DeleteByID(ctx context.Context, id int) error {
 	_, err := t.Pool.Exec(ctx, query, id)
 	return err
 }
+
+func (t *taskRepository) GetPageByDoneAndUserID(ctx context.Context, userID string, done bool, offset int) ([]entity.Task, error) {
+	query := `select id, id_user, header, description, created_at, start_date, done from task
+				where id_user = $1 and done = $2
+				order by id desc
+				offset $3
+				limit 3`
+
+	rows, err := t.Pool.Query(ctx, query, userID, done, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.collectRows(rows)
+}

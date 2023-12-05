@@ -15,6 +15,7 @@ var (
 	ErrUniqueViolation     = NewError("Violation must be unique", errors.New("non_unique_value"))
 	ErrForeignKeyViolation = NewError("Foreign Key Violation", errors.New("foreign_key_violation "))
 	ErrNoRows              = NewError("No rows in result set", errors.New("no_rows"))
+	ErrNotFound            = NewError("Tasks not found", errors.New("not_found"))
 )
 
 func (a *AppError) Error() string {

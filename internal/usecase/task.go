@@ -61,3 +61,14 @@ func (t *taskUsecase) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 
 	return tasks, nil
 }
+
+func (t *taskUsecase) PaginationTasks(ctx context.Context, userID string, done bool, page int) ([]entity.Task, error) {
+	offset := (page - 1) * 3
+
+	tasks, err := t.taskRepo.GetPageByDoneAndUserID(ctx, userID, done, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
