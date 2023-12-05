@@ -142,6 +142,19 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 	e.Encode(updatedTask)
 }
 
+func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request) {
+	tasks, err := t.taskUsecase.GetAllTasks(context.Background())
+	if err != nil {
+		t.log.Error("taskUsecase.GetAllTasks: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	e := json.NewEncoder(w)
+	e.Encode(tasks)
+}
+
 func getID(ctx context.Context) string {
 	userID, _ := ctx.Value("userID").(string)
 

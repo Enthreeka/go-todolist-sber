@@ -22,6 +22,7 @@ func Router(log *logger.Logger, service Services) *chi.Mux {
 			r.Post("/add", task.CreateTaskHandler)
 			r.Delete("/delete", task.DeleteTaskHandler)
 			r.Put("/update", task.UpdateTaskHandler)
+			r.Get("/all", task.GetAllTasksHandler)
 		})
 	})
 
