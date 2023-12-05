@@ -1,22 +1,13 @@
 create extension if not exists "uuid-ossp";
 
-create table if not exists role(
-    id int generated always as identity,
-    role varchar(100),
-    primary key (id)
-);
-
-INSERT INTO role (role) values ('user');
-INSERT INTO role (role) values ('admin');
+create type role as enum ('admin','user');
 
 create table if not exists "user"(
     id uuid DEFAULT uuid_generate_v4(),
-    role_id int DEFAULT 1,
+    role role not null default 'user',
     login varchar(100) unique not null,
     password varchar(100) unique not null,
-    primary key (id),
-    foreign key (role_id)
-        references role (id)
+    primary key (id)
 );
 
 create table if not exists task(
@@ -40,4 +31,3 @@ create table if not exists session(
     foreign key (user_id)
         references "user" (id) on delete cascade
 );
-

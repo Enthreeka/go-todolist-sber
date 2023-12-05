@@ -12,10 +12,10 @@ type userUsecase struct {
 	argon    *argon
 }
 
-func NewUserUsecase(userRepo user.UserRepository) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, salt string) user.UserUsecase {
 	return &userUsecase{
 		userRepo: userRepo,
-		argon:    NewArgonPassword(""),
+		argon:    NewArgonPassword(salt),
 	}
 }
 
@@ -43,6 +43,7 @@ func (u *userUsecase) Register(ctx context.Context, user *entity.User) (*entity.
 		return nil, err
 	}
 
+	//user.ID = uuid.New().String()
 	user.Password = hashPassword
 	data, err := u.userRepo.Create(ctx, user)
 	if err != nil {

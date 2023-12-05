@@ -6,6 +6,7 @@ type User struct {
 	ID       string `json:"id"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 var loginRegex = regexp.MustCompile("^([a-zA-Z0-9@]).{6,}$")

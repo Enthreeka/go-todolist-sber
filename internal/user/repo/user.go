@@ -22,7 +22,7 @@ func NewUserRepository(postgres *postgres.Postgres) user.UserRepository {
 
 func (u *userRepository) collectRow(row pgx.Row) (*entity.User, error) {
 	var user entity.User
-	err := row.Scan(&user.ID, &user.Login, &user.Password)
+	err := row.Scan(&user.ID, &user.Login, &user.Password, &user.Role)
 	if err == pgx.ErrNoRows {
 		return nil, apperror.ErrNoRows
 	}
@@ -52,7 +52,9 @@ func (u *userRepository) Create(ctx context.Context, user *entity.User) (*entity
 }
 
 func (u *userRepository) GetByLogin(ctx context.Context, login string) (*entity.User, error) {
-	query := `select id,login,password from "user" where login = $1`
+	query := `select u.id, u.login, u.password, u.role
+				from "user" u
+				where login = $1`
 
 	row := u.Pool.QueryRow(ctx, query, login)
 	return u.collectRow(row)
