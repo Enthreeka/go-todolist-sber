@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/internal/session"
 	"time"
@@ -17,11 +18,11 @@ func NewSessionUsecase(sessionRepo session.SessionRepository) session.SessionUse
 	}
 }
 
-func (s *sessionUsecase) CreateToken(ctx context.Context, token string, userID string) (*entity.Session, error) {
+func (s *sessionUsecase) CreateToken(ctx context.Context, userID string) (*entity.Session, error) {
 	session := &entity.Session{
-		Token:     token,
-		UserID:    userID,
+		Token:     uuid.New().String(),
 		ExpiresAt: time.Now().Add(1 * time.Hour),
+		UserID:    userID,
 	}
 
 	data, err := s.sessionRepo.Create(ctx, session)
@@ -41,11 +42,11 @@ func (s *sessionUsecase) GetToken(ctx context.Context, token string) (*entity.Se
 	return session, nil
 }
 
-func (s *sessionUsecase) UpdateToken(ctx context.Context, token string, userID string) (*entity.Session, error) {
+func (s *sessionUsecase) UpdateToken(ctx context.Context, userID string) (*entity.Session, error) {
 	session := &entity.Session{
-		Token:     token,
-		UserID:    userID,
+		Token:     uuid.New().String(),
 		ExpiresAt: time.Now().Add(1 * time.Hour),
+		UserID:    userID,
 	}
 
 	data, err := s.sessionRepo.Update(ctx, session)

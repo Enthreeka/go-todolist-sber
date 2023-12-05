@@ -45,9 +45,9 @@ func (u *userRepository) collectRows(rows pgx.Rows) ([]entity.User, error) {
 }
 
 func (u *userRepository) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
-	query := `insert into "user" (login,password) values ($1,$2) returning *`
+	query := `insert into "user" (id,login,password) values ($1,$2) returning *`
 
-	row := u.Pool.QueryRow(ctx, query, user.Login, user.Password)
+	row := u.Pool.QueryRow(ctx, query, user.ID, user.Login, user.Password)
 	return u.collectRow(row)
 }
 

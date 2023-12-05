@@ -6,7 +6,7 @@ import (
 )
 
 type SessionUsecase interface {
-	CreateToken(ctx context.Context, token string, userID string) (*entity.Session, error)
-	UpdateToken(ctx context.Context, token string, userID string) (*entity.Session, error)
+	CreateToken(ctx context.Context, userID string) (*entity.Session, error)
+	UpdateToken(ctx context.Context, userID string) (*entity.Session, error)
 	GetToken(ctx context.Context, token string) (*entity.Session, error)
 }

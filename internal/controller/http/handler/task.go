@@ -47,8 +47,6 @@ func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	userID := getUserID(r.Context())
-
 	data := new(TaskRequest)
 	d := json.NewDecoder(r.Body)
 	err := d.Decode(&data)
@@ -64,6 +62,8 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 		ParseTimeError(w)
 		return
 	}
+
+	userID := getUserID(r.Context())
 
 	task := &entity.Task{
 		Header:      data.Header,

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/internal/user"
@@ -19,13 +20,20 @@ func NewUserUsecase(userRepo user.UserRepository, salt string) user.UserUsecase 
 	}
 }
 
-func (u *userUsecase) Login(ctx context.Context, user *entity.User) (*entity.User, error) {
-	data, err := u.userRepo.GetByLogin(ctx, user.Login)
+func (u *userUsecase) Login(ctx context.Context, login, password string) (*entity.User, error) {
+	if !entity.IsLoginValid(login) {
+		return nil, apperror.ErrDataNotValid
+	}
+	if !entity.IsPasswordValid(password) {
+		return nil, apperror.ErrDataNotValid
+	}
+
+	data, err := u.userRepo.GetByLogin(ctx, login)
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.argon.VerifyPassword(data.Password, user.Password)
+	err = u.argon.VerifyPassword(data.Password, password)
 	if err != nil {
 		return nil, err
 	}
@@ -33,18 +41,22 @@ func (u *userUsecase) Login(ctx context.Context, user *entity.User) (*entity.Use
 	return data, nil
 }
 
-func (u *userUsecase) Register(ctx context.Context, user *entity.User) (*entity.User, error) {
-	if !entity.IsLoginValid(user.Login) {
+func (u *userUsecase) Register(ctx context.Context, login, password string) (*entity.User, error) {
+	if !entity.IsLoginValid(login) {
 		return nil, apperror.ErrDataNotValid
 	}
 
-	hashPassword, err := u.argon.GenerateHashFromPassword(user.Password)
+	hashPassword, err := u.argon.GenerateHashFromPassword(password)
 	if err != nil {
 		return nil, err
 	}
 
-	//user.ID = uuid.New().String()
-	user.Password = hashPassword
+	user := &entity.User{
+		ID:       uuid.New().String(),
+		Password: hashPassword,
+		Login:    login,
+	}
+
 	data, err := u.userRepo.Create(ctx, user)
 	if err != nil {
 		return nil, err

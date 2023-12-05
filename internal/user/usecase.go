@@ -6,6 +6,6 @@ import (
 )
 
 type UserUsecase interface {
-	Login(ctx context.Context, user *entity.User) (*entity.User, error)
-	Register(ctx context.Context, user *entity.User) (*entity.User, error)
+	Login(ctx context.Context, login, password string) (*entity.User, error)
+	Register(ctx context.Context, login, password string) (*entity.User, error)
 }
