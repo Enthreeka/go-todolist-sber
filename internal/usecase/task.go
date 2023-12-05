@@ -5,6 +5,7 @@ import (
 	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/internal/repo"
+	"time"
 )
 
 type taskUsecase struct {
@@ -62,10 +63,19 @@ func (t *taskUsecase) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 	return tasks, nil
 }
 
-func (t *taskUsecase) PaginationTasks(ctx context.Context, userID string, done bool, page int) ([]entity.Task, error) {
+func (t *taskUsecase) PaginationTasks(ctx context.Context, userID string, status bool, page int) ([]entity.Task, error) {
 	offset := (page - 1) * 3
 
-	tasks, err := t.taskRepo.GetPageByDoneAndUserID(ctx, userID, done, offset)
+	tasks, err := t.taskRepo.GetPageByStatusAndUserID(ctx, userID, status, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+func (t *taskUsecase) GetFilteredTasks(ctx context.Context, userID string, date time.Time, status bool) ([]entity.Task, error) {
+	tasks, err := t.taskRepo.GetByDateAndStatus(ctx, userID, date, status)
 	if err != nil {
 		return nil, err
 	}

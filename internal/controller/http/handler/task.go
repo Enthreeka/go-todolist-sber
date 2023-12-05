@@ -157,7 +157,7 @@ func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request)
 }
 
 //localhost:8080/task/pagination?page=3&status=false
-func (t *taskHandler) GetTaskWithPagination(w http.ResponseWriter, r *http.Request) {
+func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *http.Request) {
 	page, errPage := strconv.Atoi(r.URL.Query().Get("page"))
 	status, errStatus := strconv.ParseBool(r.URL.Query().Get("status"))
 	if errPage != nil || errStatus != nil {
@@ -176,6 +176,34 @@ func (t *taskHandler) GetTaskWithPagination(w http.ResponseWriter, r *http.Reque
 	if len(tasks) == 0 {
 		t.log.Error("tasks = 0")
 		HandleError(w, apperror.ErrNotFound, http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	e := json.NewEncoder(w)
+	e.Encode(tasks)
+}
+
+func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request) {
+	date := r.URL.Query().Get("datetime")
+	status, err := strconv.ParseBool(r.URL.Query().Get("status"))
+	if err != nil || date == "" {
+		t.log.Error("Not correct query result")
+		QueryError(w)
+		return
+	}
+
+	parsedDate, err := time.Parse("02.01.2006 15:04", date)
+	if err != nil {
+		t.log.Error("time.Parse: %v", err)
+		ParseTimeError(w)
+		return
+	}
+
+	tasks, err := t.taskUsecase.GetFilteredTasks(context.Background(), "53153c2c-1c10-4b92-b5ff-0cf67b116654", parsedDate, status)
+	if err != nil {
+		t.log.Error("taskUsecase.GetFilteredTasks: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
 	}
 

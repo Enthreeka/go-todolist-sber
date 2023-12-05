@@ -8,6 +8,7 @@ import (
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/pkg/postgres"
 	"strings"
+	"time"
 )
 
 type taskRepository struct {
@@ -110,14 +111,29 @@ func (t *taskRepository) DeleteByID(ctx context.Context, id int) error {
 	return err
 }
 
-func (t *taskRepository) GetPageByDoneAndUserID(ctx context.Context, userID string, done bool, offset int) ([]entity.Task, error) {
-	query := `select id, id_user, header, description, created_at, start_date, done from task
+func (t *taskRepository) GetPageByStatusAndUserID(ctx context.Context, userID string, status bool, offset int) ([]entity.Task, error) {
+	query := `select id, id_user, header, description, created_at, start_date, done
+				from task
 				where id_user = $1 and done = $2
 				order by id desc
 				offset $3
 				limit 3`
 
-	rows, err := t.Pool.Query(ctx, query, userID, done, offset)
+	rows, err := t.Pool.Query(ctx, query, userID, status, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.collectRows(rows)
+}
+
+func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, date time.Time, status bool) ([]entity.Task, error) {
+	query := `select id, id_user, header, description, created_at, start_date, done
+				from task
+				where id_user = $1 and done = $2 and start_date = $3
+				order by id desc`
+
+	rows, err := t.Pool.Query(ctx, query, userID, status, date)
 	if err != nil {
 		return nil, err
 	}

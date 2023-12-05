@@ -28,5 +28,5 @@ func DecodingError(w http.ResponseWriter) {
 }
 
 func QueryError(w http.ResponseWriter) {
-	ErrorJSON(w, "query request not full", http.StatusBadRequest)
+	ErrorJSON(w, "query request not correct", http.StatusBadRequest)
 }
