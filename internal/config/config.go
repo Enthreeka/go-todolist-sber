@@ -10,6 +10,9 @@ type (
 	Config struct {
 		Postgres    Postgres    `json:"postgres"`
 		HTTTPServer HTTTPServer `json:"http_server"`
+
+		Salt      string `json:"salt"`
+		SecretKey string `json:"secret_key"`
 	}
 
 	Postgres struct {
@@ -38,6 +41,8 @@ func New() (*Config, error) {
 			Port:       os.Getenv("HTTP_SERVER_PORT"),
 			TypeServer: os.Getenv("HTTP_SERVER_TYPE_SERVER"),
 		},
+		Salt:      os.Getenv("SALT"),
+		SecretKey: os.Getenv("SECRET_KEY"),
 	}
 
 	return config, nil

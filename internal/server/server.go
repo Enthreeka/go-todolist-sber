@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"go-todolist-sber/internal/config"
 	"go-todolist-sber/internal/controller/http"
-	"go-todolist-sber/internal/task/repo"
-	"go-todolist-sber/internal/task/usecase"
+	sessionRepo "go-todolist-sber/internal/session/repo"
+	sessionUsecase "go-todolist-sber/internal/session/usecase"
+	taskRepo "go-todolist-sber/internal/task/repo"
+	taskUsecase "go-todolist-sber/internal/task/usecase"
+	userRepo "go-todolist-sber/internal/user/repo"
+	userUsecase "go-todolist-sber/internal/user/usecase"
 	"go-todolist-sber/pkg/logger"
 	"go-todolist-sber/pkg/postgres"
 )
@@ -19,11 +23,15 @@ func Run(log *logger.Logger, cfg *config.Config) error {
 
 	defer psql.Close()
 
-	taskRepo := repo.NewTaskRepository(psql)
+	taskRepo := taskRepo.NewTaskRepository(psql)
+	userRepo := userRepo.NewUserRepository(psql)
+	sessionRepo := sessionRepo.NewSessionRepository(psql)
 
-	taskUsecase := usecase.NewTaskUsecase(taskRepo)
+	taskUsecase := taskUsecase.NewTaskUsecase(taskRepo)
+	userUsecase := userUsecase.NewUserUsecase(userRepo, cfg.Salt)
+	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepo)
 
-	server := http.NewServer(log, http.Services{Task: taskUsecase}, http.ServerOption{
+	server := http.NewServer(log, http.Services{Task: taskUsecase, User: userUsecase, Session: sessionUsecase}, http.ServerOption{
 		Addr: fmt.Sprintf("%s:%s", cfg.HTTTPServer.Hostname, cfg.HTTTPServer.Port),
 	})
 
