@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/entity"
-	"go-todolist-sber/internal/usecase"
+	"go-todolist-sber/internal/task"
 	"go-todolist-sber/pkg/logger"
 	"net/http"
 	"strconv"
@@ -13,11 +13,11 @@ import (
 )
 
 type taskHandler struct {
-	taskUsecase usecase.Task
+	taskUsecase task.TaskUsecase
 	log         *logger.Logger
 }
 
-func NewTaskHandler(taskUsecase usecase.Task, log *logger.Logger) *taskHandler {
+func NewTaskHandler(taskUsecase task.TaskUsecase, log *logger.Logger) *taskHandler {
 	return &taskHandler{
 		taskUsecase: taskUsecase,
 		log:         log,

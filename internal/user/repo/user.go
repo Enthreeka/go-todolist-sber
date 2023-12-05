@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5"
 	"go-todolist-sber/internal/apperror"
+	pgxError "go-todolist-sber/internal/apperror/pgx_errors"
 	"go-todolist-sber/internal/entity"
+	"go-todolist-sber/internal/user"
 	"go-todolist-sber/pkg/postgres"
 )
 
@@ -12,7 +14,7 @@ type userRepository struct {
 	*postgres.Postgres
 }
 
-func NewUserRepository(postgres *postgres.Postgres) User {
+func NewUserRepository(postgres *postgres.Postgres) user.UserRepository {
 	return &userRepository{
 		postgres,
 	}
@@ -24,11 +26,11 @@ func (u *userRepository) collectRow(row pgx.Row) (*entity.User, error) {
 	if err == pgx.ErrNoRows {
 		return nil, apperror.ErrNoRows
 	}
-	errCode := ErrorCode(err)
-	if errCode == ForeignKeyViolation {
+	errCode := pgxError.ErrorCode(err)
+	if errCode == pgxError.ForeignKeyViolation {
 		return nil, apperror.ErrForeignKeyViolation
 	}
-	if errCode == UniqueViolation {
+	if errCode == pgxError.UniqueViolation {
 		return nil, apperror.ErrUniqueViolation
 	}
 

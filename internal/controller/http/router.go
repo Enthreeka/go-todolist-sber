@@ -3,12 +3,12 @@ package http
 import (
 	"github.com/go-chi/chi/v5"
 	"go-todolist-sber/internal/controller/http/handler"
-	"go-todolist-sber/internal/usecase"
+	"go-todolist-sber/internal/task"
 	"go-todolist-sber/pkg/logger"
 )
 
 type Services struct {
-	Task usecase.Task
+	Task task.TaskUsecase
 }
 
 func Router(log *logger.Logger, service Services) *chi.Mux {

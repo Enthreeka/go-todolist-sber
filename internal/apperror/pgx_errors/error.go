@@ -1,4 +1,4 @@
-package repo
+package pgx_errors
 
 import (
 	"errors"

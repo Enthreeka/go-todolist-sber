@@ -4,15 +4,15 @@ import (
 	"context"
 	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/entity"
-	"go-todolist-sber/internal/repo"
+	"go-todolist-sber/internal/task"
 	"time"
 )
 
 type taskUsecase struct {
-	taskRepo repo.Task
+	taskRepo task.TaskRepository
 }
 
-func NewTaskUsecase(taskRepo repo.Task) Task {
+func NewTaskUsecase(taskRepo task.TaskRepository) task.TaskUsecase {
 	return &taskUsecase{
 		taskRepo: taskRepo,
 	}

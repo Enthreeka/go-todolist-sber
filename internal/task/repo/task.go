@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"go-todolist-sber/internal/apperror"
+	pgxError "go-todolist-sber/internal/apperror/pgx_errors"
 	"go-todolist-sber/internal/entity"
+	"go-todolist-sber/internal/task"
 	"go-todolist-sber/pkg/postgres"
 	"strings"
 	"time"
@@ -15,7 +17,7 @@ type taskRepository struct {
 	*postgres.Postgres
 }
 
-func NewTaskRepository(postgres *postgres.Postgres) Task {
+func NewTaskRepository(postgres *postgres.Postgres) task.TaskRepository {
 	return &taskRepository{
 		postgres,
 	}
@@ -27,11 +29,11 @@ func (t *taskRepository) collectRow(row pgx.Row) (*entity.Task, error) {
 	if err == pgx.ErrNoRows {
 		return nil, apperror.ErrNoRows
 	}
-	errCode := ErrorCode(err)
-	if errCode == ForeignKeyViolation {
+	errCode := pgxError.ErrorCode(err)
+	if errCode == pgxError.ForeignKeyViolation {
 		return nil, apperror.ErrForeignKeyViolation
 	}
-	if errCode == UniqueViolation {
+	if errCode == pgxError.UniqueViolation {
 		return nil, apperror.ErrUniqueViolation
 	}
 

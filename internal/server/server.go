@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"go-todolist-sber/internal/config"
 	"go-todolist-sber/internal/controller/http"
-	"go-todolist-sber/internal/repo"
-	"go-todolist-sber/internal/usecase"
+	"go-todolist-sber/internal/task/repo"
+	"go-todolist-sber/internal/task/usecase"
 	"go-todolist-sber/pkg/logger"
 	"go-todolist-sber/pkg/postgres"
 )
