@@ -32,9 +32,9 @@ type TaskRequest struct {
 }
 
 func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
-	//userID := getID(r.Context())
+	userID := getUserID(r.Context())
 
-	task, err := t.taskUsecase.GetUserTasks(context.Background(), "53153c2c-1c10-4b92-b5ff-0cf67b116654")
+	task, err := t.taskUsecase.GetUserTasks(context.Background(), userID)
 	if err != nil {
 		t.log.Error("taskUsecase.GetUserTasks: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
@@ -47,7 +47,7 @@ func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	//userID := getID(r.Context())
+	userID := getUserID(r.Context())
 
 	data := new(TaskRequest)
 	d := json.NewDecoder(r.Body)
@@ -69,7 +69,7 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 		Header:      data.Header,
 		Description: data.Description,
 		StartDate:   parsedTime,
-		UserID:      "53153c2c-1c10-4b92-b5ff-0cf67b116654",
+		UserID:      userID,
 	}
 	createdTask, err := t.taskUsecase.CreateTask(context.Background(), task)
 	if err != nil {
@@ -123,13 +123,14 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
+	userID := getUserID(r.Context())
 
 	task := &entity.Task{
 		Header:      data.Header,
 		Description: data.Description,
 		StartDate:   parsedTime,
 		ID:          data.ID,
-		UserID:      "53153c2c-1c10-4b92-b5ff-0cf67b116654",
+		UserID:      userID,
 	}
 	updatedTask, err := t.taskUsecase.UpdateTask(context.Background(), task)
 	if err != nil {
@@ -166,7 +167,9 @@ func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	tasks, err := t.taskUsecase.PaginationTasks(context.Background(), "53153c2c-1c10-4b92-b5ff-0cf67b116654", status, page)
+	userID := getUserID(r.Context())
+
+	tasks, err := t.taskUsecase.PaginationTasks(context.Background(), userID, status, page)
 	if err != nil {
 		t.log.Error("taskUsecase.PaginationTasks: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
@@ -200,7 +203,9 @@ func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tasks, err := t.taskUsecase.GetFilteredTasks(context.Background(), "53153c2c-1c10-4b92-b5ff-0cf67b116654", parsedDate, status)
+	userID := getUserID(r.Context())
+
+	tasks, err := t.taskUsecase.GetFilteredTasks(context.Background(), userID, parsedDate, status)
 	if err != nil {
 		t.log.Error("taskUsecase.GetFilteredTasks: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
@@ -212,7 +217,7 @@ func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request)
 	e.Encode(tasks)
 }
 
-func getID(ctx context.Context) string {
+func getUserID(ctx context.Context) string {
 	userID, _ := ctx.Value("userID").(string)
 
 	return userID

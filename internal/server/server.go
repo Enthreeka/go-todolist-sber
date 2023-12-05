@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/sessions"
 	"go-todolist-sber/internal/config"
 	"go-todolist-sber/internal/controller/http"
 	sessionRepo "go-todolist-sber/internal/session/repo"
@@ -31,9 +32,16 @@ func Run(log *logger.Logger, cfg *config.Config) error {
 	userUsecase := userUsecase.NewUserUsecase(userRepo, cfg.Salt)
 	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepo)
 
+	var store = sessions.NewCookieStore([]byte(cfg.SecretKey))
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+	}
+
 	server := http.NewServer(log, http.Services{Task: taskUsecase, User: userUsecase, Session: sessionUsecase}, http.ServerOption{
 		Addr: fmt.Sprintf("%s:%s", cfg.HTTTPServer.Hostname, cfg.HTTTPServer.Port),
-	})
+	}, store)
 
 	log.Info("Starting http server on %s: %s%s", cfg.HTTTPServer.TypeServer, cfg.HTTTPServer.Hostname, cfg.HTTTPServer.Port)
 	if err := server.ListenAndServe(); err != nil {

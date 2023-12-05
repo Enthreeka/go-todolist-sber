@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"context"
 	"github.com/gorilla/sessions"
+	"go-todolist-sber/internal/entity"
+	"go-todolist-sber/internal/session"
 	"go-todolist-sber/pkg/logger"
 	"net/http"
 	"time"
@@ -19,15 +22,28 @@ func MiddlewareLogger(log *logger.Logger) middleware {
 	}
 }
 
-func AuthMiddleware(store *sessions.CookieStore) middleware {
+func AuthMiddleware(sess session.SessionUsecase, store *sessions.CookieStore) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, err := store.Get(r, "session.id")
+			session, err := store.Get(r, "sessionID")
 			if err != nil {
 				ErrorJSON(w, "Internal server error", http.StatusUnauthorized)
+				return
+			}
+			var data *entity.Session
+
+			if (session.Values["authenticated"] != nil) && session.Values["authenticated"] != false {
+				sessionId := session.Values["sessionID"]
+
+				data, err = sess.GetToken(context.Background(), sessionId.(string))
+				if err != nil {
+					ErrorJSON(w, err.Error(), http.StatusForbidden)
+					return
+				}
 			}
 
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), "userID", data.UserID)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
