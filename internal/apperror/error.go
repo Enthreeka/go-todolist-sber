@@ -14,6 +14,7 @@ type AppError struct {
 var (
 	ErrUniqueViolation     = NewError("Violation must be unique", errors.New("non_unique_value"))
 	ErrForeignKeyViolation = NewError("Foreign Key Violation", errors.New("foreign_key_violation "))
+	ErrNoRows              = NewError("No rows in result set", errors.New("no_rows"))
 )
 
 func (a *AppError) Error() string {
@@ -33,6 +34,8 @@ func ParseHTTPErrStatusCode(err error) int {
 		return http.StatusBadRequest
 	case errors.Is(err, ErrForeignKeyViolation):
 		return http.StatusBadRequest
+	case errors.Is(err, ErrNoRows):
+		return http.StatusNotFound
 	}
 
 	return http.StatusInternalServerError

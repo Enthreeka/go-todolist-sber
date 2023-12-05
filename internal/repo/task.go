@@ -24,7 +24,7 @@ func (t *taskRepository) collectRow(row pgx.Row) (*entity.Task, error) {
 	var task entity.Task
 	err := row.Scan(&task.ID, &task.UserID, &task.Header, &task.Description, &task.CreatedAt, &task.StartDate, &task.Done)
 	if err == pgx.ErrNoRows {
-		return nil, err
+		return nil, apperror.ErrNoRows
 	}
 	errCode := ErrorCode(err)
 	if errCode == ForeignKeyViolation {
@@ -89,6 +89,7 @@ func (t *taskRepository) GetByUserID(ctx context.Context, id string) ([]entity.T
 	if err != nil {
 		return nil, err
 	}
+
 	return t.collectRows(rows)
 }
 

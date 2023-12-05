@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"go-todolist-sber/internal/controller/http/handler"
 	"go-todolist-sber/pkg/logger"
 	"net/http"
 )
@@ -18,6 +19,7 @@ func NewServer(log *logger.Logger, services Services, opts ServerOption) *http.S
 	mux.Use(middleware.RealIP,
 		middleware.Recoverer,
 		middleware.AllowContentType("application/json"),
+		handler.MiddlewareLogger(log),
 	)
 
 	mux.Use(cors.Handler(cors.Options{
@@ -26,6 +28,8 @@ func NewServer(log *logger.Logger, services Services, opts ServerOption) *http.S
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
 	}))
+
+	mux.Mount("/", Router(log, services))
 
 	return &http.Server{
 		Addr:    opts.Addr,

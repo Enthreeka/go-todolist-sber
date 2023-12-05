@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/internal/repo"
 )
@@ -41,6 +42,10 @@ func (t *taskUsecase) GetUserTasks(ctx context.Context, userID string) ([]entity
 	tasks, err := t.taskRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
+	}
+
+	if tasks == nil || len(tasks) == 0 {
+		return nil, apperror.ErrNoRows
 	}
 
 	return tasks, nil

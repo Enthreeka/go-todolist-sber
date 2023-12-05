@@ -18,3 +18,4 @@ create table if not exists task(
     foreign key (id_user)
             references "user" (id) on delete cascade
 );
+
