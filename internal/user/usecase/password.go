@@ -17,7 +17,6 @@ type argon struct {
 	keyLen  uint32
 }
 
-// NewArgonPassword creates an instance of the structure
 func NewArgonPassword(salt string) *argon {
 	return &argon{
 		salt:    []byte(salt),
@@ -39,7 +38,6 @@ func (a *argon) GenerateHashFromPassword(password string) (string, error) {
 	return hashPasswordString, nil
 }
 
-// VerifyPassword serves for compare the entered password and the password in the database
 func (a *argon) VerifyPassword(hashPassword string, password string) error {
 	newHashByte := argon2.IDKey([]byte(password), a.salt, a.time, a.memory, a.threads, a.keyLen)
 

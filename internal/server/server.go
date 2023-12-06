@@ -32,7 +32,7 @@ func Run(log *logger.Logger, cfg *config.Config) error {
 	userUsecase := userUsecase.NewUserUsecase(userRepo, cfg.Salt)
 	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepo)
 
-	var store = sessions.NewCookieStore([]byte(cfg.SecretKey))
+	var store = sessions.NewCookieStore([]byte("secret-key"))
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   3600,

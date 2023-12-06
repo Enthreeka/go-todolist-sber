@@ -59,8 +59,8 @@ func (s *sessionRepo) GetByToken(ctx context.Context, token string) (*entity.Ses
 }
 
 func (s *sessionRepo) Update(ctx context.Context, session *entity.Session) (*entity.Session, error) {
-	query := `update session set token = $1, expires_at = $2 where id = $3 returning *`
+	query := `update session set token = $1, expires_at = $2 where user_id = $3 returning *`
 
-	row := s.Pool.QueryRow(ctx, query, session.Token, session.ExpiresAt)
+	row := s.Pool.QueryRow(ctx, query, session.Token, session.ExpiresAt, session.UserID)
 	return s.collectRow(row)
 }

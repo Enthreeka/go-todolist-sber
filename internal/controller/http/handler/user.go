@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/gorilla/sessions"
 	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/session"
 	"go-todolist-sber/internal/user"
@@ -13,13 +14,15 @@ import (
 type userHandler struct {
 	userUsecase    user.UserUsecase
 	sessionUsecase session.SessionUsecase
+	store          *sessions.CookieStore
 	log            *logger.Logger
 }
 
-func NewUserHandler(userUsecase user.UserUsecase, sessionUsecase session.SessionUsecase, log *logger.Logger) *userHandler {
+func NewUserHandler(userUsecase user.UserUsecase, sessionUsecase session.SessionUsecase, store *sessions.CookieStore, log *logger.Logger) *userHandler {
 	return &userHandler{
 		userUsecase:    userUsecase,
 		sessionUsecase: sessionUsecase,
+		store:          store,
 		log:            log,
 	}
 }
@@ -41,17 +44,19 @@ func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := u.userUsecase.Register(context.Background(), data.Login, data.Password)
 	if err != nil {
-		u.log.Error("taskUsecase.GetUserTasks: %v", err)
+		u.log.Error("userUsecase.Register: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
 	}
 
-	_, err = u.sessionUsecase.CreateToken(context.Background(), user.ID)
+	sess, err := u.sessionUsecase.CreateToken(context.Background(), user.ID)
 	if err != nil {
-		u.log.Error("taskUsecase.GetUserTasks: %v", err)
+		u.log.Error("sessionUsecase.CreateToken: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
 	}
+
+	u.authenticated(w, r, sess.Token, true)
 
 	w.WriteHeader(http.StatusCreated)
 	e := json.NewEncoder(w)
@@ -74,7 +79,28 @@ func (u *userHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
 	}
+
+	sess, err := u.sessionUsecase.UpdateToken(context.Background(), user.ID)
+	if err != nil {
+		u.log.Error("sessionUsecase.UpdateToken: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	u.authenticated(w, r, sess.Token, true)
+
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
 	e.Encode(user)
+}
+
+func (u *userHandler) authenticated(w http.ResponseWriter, r *http.Request, sessionID string, authenticated bool) {
+	session, err := u.store.Get(r, "session.id")
+	if err != nil {
+		u.log.Error("store.Get(r,sessionID): %v", err)
+	}
+	session.Values["authenticated"] = authenticated
+	session.Values["sessionID"] = sessionID
+
+	session.Save(r, w)
 }

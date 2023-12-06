@@ -20,12 +20,14 @@ func Router(log *logger.Logger, service Services, store *sessions.CookieStore) *
 	mux := chi.NewMux()
 
 	task := handler.NewTaskHandler(service.Task, log)
+	user := handler.NewUserHandler(service.User, service.Session, store, log)
 
 	auth := handler.AuthMiddleware(service.Session, store)
 
 	mux.Route("/", func(r chi.Router) {
 		r.Route("/user", func(r chi.Router) {
-
+			r.Post("/register", user.RegisterHandler)
+			r.Post("/login", user.LoginHandler)
 		})
 		r.With(auth).Route("/task", func(r chi.Router) {
 			r.Get("/list", task.GetTaskHandler)
