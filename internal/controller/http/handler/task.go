@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/internal/task"
@@ -28,7 +29,6 @@ type TaskRequest struct {
 	Header      string `json:"header"`
 	Description string `json:"description"`
 	StartDate   string `json:"start_date"`
-	ID          int    `json:"id"`
 }
 
 // GetTaskHandler godoc
@@ -38,8 +38,8 @@ type TaskRequest struct {
 // @Accept json
 // @Produce json
 // @Success 200 {object} []entity.Task
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /task/list [get]
 func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r.Context())
@@ -64,9 +64,9 @@ func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param input body TaskRequest true "task attribute"
 // @Success 201 {object} entity.Task
-// @Failure 400 {object} DecodingError
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 400 {object} JSONError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /task/add [post]
 func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	data := new(TaskRequest)
@@ -111,24 +111,21 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Description delete task by id
 // @Accept json
 // @Produce json
-// @Param input body data true "task_id"
+// @Param id path int true "task id"
 // @Success 204
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /task/delete [delete]
 func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		ID int `json:"id"`
-	}
-	d := json.NewDecoder(r.Body)
-	err := d.Decode(&data)
+	param := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(param)
 	if err != nil {
-		t.log.Error("json.NewDecoder: %v", err)
+		t.log.Error("strconv.Atoi: %v", err)
 		DecodingError(w)
 		return
 	}
 
-	if err := t.taskUsecase.DeleteTask(context.Background(), data.ID); err != nil {
+	if err := t.taskUsecase.DeleteTask(context.Background(), id); err != nil {
 		t.log.Error("taskUsecase.DeleteTask: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
@@ -145,14 +142,22 @@ func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Produce json
 // @Param input body TaskRequest true "task attribute"
 // @Success 200 {object} entity.Task
-// @Failure 400 {object} DecodingError
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
-// @Router /task/delete [delete]
+// @Failure 400 {object} JSONError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
+// @Router /task/delete [put]
 func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
+	param := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(param)
+	if err != nil {
+		t.log.Error("strconv.Atoi: %v", err)
+		DecodingError(w)
+		return
+	}
+
 	data := new(TaskRequest)
 	d := json.NewDecoder(r.Body)
-	err := d.Decode(&data)
+	err = d.Decode(&data)
 	if err != nil {
 		t.log.Error("json.NewDecoder: %v", err)
 		DecodingError(w)
@@ -174,7 +179,7 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 		Header:      data.Header,
 		Description: data.Description,
 		StartDate:   parsedTime,
-		ID:          data.ID,
+		ID:          id,
 		UserID:      userID,
 	}
 	updatedTask, err := t.taskUsecase.UpdateTask(context.Background(), task)
@@ -196,8 +201,8 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Accept json
 // @Produce json
 // @Success 200 {object} []entity.Task
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /task/all [get]
 func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request) {
 	tasks, err := t.taskUsecase.GetAllTasks(context.Background())
@@ -221,9 +226,9 @@ func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request)
 // @Param page query int false "page number" Format(page)
 // @Param status query boolean false "task status" Format(status)
 // @Success 200 {object} []entity.Task
-// @Failure 400 {object} QueryError
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 400 {object} JSONError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /task/pagination [get]
 func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *http.Request) {
 	page, errPage := strconv.Atoi(r.URL.Query().Get("page"))
@@ -255,7 +260,7 @@ func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *htt
 }
 
 // GetFilteredHandler godoc
-// @Summary Get Task
+// @Summary Get task
 // @Tags Task
 // @Description Get user task with filter
 // @Accept json
@@ -263,9 +268,9 @@ func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *htt
 // @Param datetime query string false "date and time required tasks" Format(datetime)
 // @Param status query boolean false "task status" Format(status)
 // @Success 200 {object} []entity.Task
-// @Failure 400 {object} QueryError
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 400 {object} JSONError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /task/filter [get]
 func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request) {
 	date := r.URL.Query().Get("datetime")

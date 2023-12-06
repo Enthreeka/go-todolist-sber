@@ -1,0 +1,371 @@
+basePath: /
+definitions:
+  entity.Task:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      done:
+        type: boolean
+      header:
+        type: string
+      id:
+        type: integer
+      start_date:
+        type: string
+      user_id:
+        type: string
+    type: object
+  entity.User:
+    properties:
+      id:
+        type: string
+      login:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+    type: object
+  handler.JSONError:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  handler.TaskRequest:
+    properties:
+      description:
+        type: string
+      header:
+        type: string
+      start_date:
+        type: string
+    type: object
+  handler.UserRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Swagger API for to do list
+  title: Blueprint Swagger API
+  version: "1.0"
+paths:
+  /task/add:
+    post:
+      consumes:
+      - application/json
+      description: create new user task by userID from context, return created task
+      parameters:
+      - description: task attribute
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Task'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Create new task
+      tags:
+      - Task
+  /task/all:
+    get:
+      consumes:
+      - application/json
+      description: Get all users tasks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Task'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Get all task
+      tags:
+      - Task
+  /task/delete:
+    delete:
+      consumes:
+      - application/json
+      description: delete task by id
+      parameters:
+      - description: task id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Delete task
+      tags:
+      - Task
+    put:
+      consumes:
+      - application/json
+      description: Update header, description, datetime, task status by userID from
+        context, return updated task
+      parameters:
+      - description: task attribute
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Task'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Update task
+      tags:
+      - Task
+  /task/filter:
+    get:
+      consumes:
+      - application/json
+      description: Get user task with filter
+      parameters:
+      - description: date and time required tasks
+        format: datetime
+        in: query
+        name: datetime
+        type: string
+      - description: task status
+        format: status
+        in: query
+        name: status
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Task'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Get task
+      tags:
+      - Task
+  /task/list:
+    get:
+      consumes:
+      - application/json
+      description: get user task by userID from context, return tasks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Task'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Get user task
+      tags:
+      - Task
+  /task/pagination:
+    get:
+      consumes:
+      - application/json
+      description: Get user task with pagination by userID from context
+      parameters:
+      - description: page number
+        format: page
+        in: query
+        name: page
+        type: integer
+      - description: task status
+        format: status
+        in: query
+        name: status
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Task'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Get tasks
+      tags:
+      - Task
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: login user,returns user and set session
+      parameters:
+      - description: user login and password
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Login user
+      tags:
+      - Auth
+  /user/logout:
+    post:
+      consumes:
+      - application/json
+      description: logout user removing session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Logout user
+      tags:
+      - Auth
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: register new user, returns user and set session
+      parameters:
+      - description: user login and password
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Register new user
+      tags:
+      - Auth
+swagger: "2.0"

@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "go-todolist-sber/docs"
 	"go-todolist-sber/internal/config"
 	"go-todolist-sber/internal/server"
 	"go-todolist-sber/pkg/logger"

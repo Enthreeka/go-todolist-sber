@@ -40,10 +40,9 @@ type UserRequest struct {
 // @Produce json
 // @Param input body UserRequest true "user login and password"
 // @Success 201 {object} entity.User
-// @Failure 400 {object} HandleError
-// @Failure 400 {object} DecodingError
-// @Failure 422 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 400 {object} JSONError
+// @Failure 422 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /user/register [post]
 func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	data := new(UserRequest)
@@ -84,10 +83,10 @@ func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param input body UserRequest true "user login and password"
 // @Success 200 {object} entity.User
-// @Failure 400 {object} DecodingError
-// @Failure 401 {object} HandleError
-// @Failure 404 {object} HandleError
-// @Failure 500 {object} HandleError
+// @Failure 400 {object} JSONError
+// @Failure 401 {object} JSONError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
 // @Router /user/login [post]
 func (u *userHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	data := new(UserRequest)
