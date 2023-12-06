@@ -106,10 +106,10 @@ func (t *taskRepository) GetAll(ctx context.Context) ([]entity.Task, error) {
 	return t.collectRows(rows)
 }
 
-func (t *taskRepository) DeleteByID(ctx context.Context, id int) error {
-	query := `delete from task where id = $1`
+func (t *taskRepository) DeleteByID(ctx context.Context, userID string, id int) error {
+	query := `delete from task where id = $1 and id_user = $2`
 
-	_, err := t.Pool.Exec(ctx, query, id)
+	_, err := t.Pool.Exec(ctx, query, id, userID)
 	return err
 }
 

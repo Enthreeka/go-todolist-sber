@@ -53,6 +53,7 @@ func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(tasks)
 }
 
@@ -102,6 +103,7 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusCreated)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(createdTask)
 }
 
@@ -115,7 +117,7 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Success 204
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
-// @Router /task/delete [delete]
+// @Router /task/{id} [delete]
 func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(param)
@@ -124,8 +126,9 @@ func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 		DecodingError(w)
 		return
 	}
+	userID := getUserID(r.Context())
 
-	if err := t.taskUsecase.DeleteTask(context.Background(), id); err != nil {
+	if err := t.taskUsecase.DeleteTask(context.Background(), userID, id); err != nil {
 		t.log.Error("taskUsecase.DeleteTask: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
@@ -191,6 +194,7 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(updatedTask)
 }
 
@@ -201,10 +205,17 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Accept json
 // @Produce json
 // @Success 200 {object} []entity.Task
+// @Failure 403 {object} JSONError
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
 // @Router /task/all [get]
 func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request) {
+	role := getRole(r.Context())
+	if role != "admin" {
+		ErrorJSON(w, "access denied", http.StatusForbidden)
+		return
+	}
+
 	tasks, err := t.taskUsecase.GetAllTasks(context.Background())
 	if err != nil {
 		t.log.Error("taskUsecase.GetAllTasks: %v", err)
@@ -214,6 +225,7 @@ func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(tasks)
 }
 
@@ -256,6 +268,7 @@ func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *htt
 
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(tasks)
 }
 
@@ -299,6 +312,7 @@ func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(tasks)
 }
 
@@ -306,4 +320,10 @@ func getUserID(ctx context.Context) string {
 	userID, _ := ctx.Value("userID").(string)
 
 	return userID
+}
+
+func getRole(ctx context.Context) string {
+	role, _ := ctx.Value("role").(string)
+
+	return role
 }

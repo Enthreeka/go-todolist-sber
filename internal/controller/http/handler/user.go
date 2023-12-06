@@ -72,6 +72,7 @@ func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(user)
 }
 
@@ -116,6 +117,7 @@ func (u *userHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
 	e.Encode(user)
 }
 

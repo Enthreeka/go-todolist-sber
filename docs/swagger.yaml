@@ -58,6 +58,33 @@ info:
   title: Blueprint Swagger API
   version: "1.0"
 paths:
+  /task/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete task by id
+      parameters:
+      - description: task id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Delete task
+      tags:
+      - Task
   /task/add:
     post:
       consumes:
@@ -106,6 +133,10 @@ paths:
             items:
               $ref: '#/definitions/entity.Task'
             type: array
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.JSONError'
         "404":
           description: Not Found
           schema:
@@ -118,32 +149,6 @@ paths:
       tags:
       - Task
   /task/delete:
-    delete:
-      consumes:
-      - application/json
-      description: delete task by id
-      parameters:
-      - description: task id
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-      summary: Delete task
-      tags:
-      - Task
     put:
       consumes:
       - application/json

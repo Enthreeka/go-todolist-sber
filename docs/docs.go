@@ -90,6 +90,12 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handler.JSONError"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -141,45 +147,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.JSONError"
                         }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "delete task by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Task"
-                ],
-                "summary": "Delete task",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "task id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
                     },
                     "404": {
                         "description": "Not Found",
@@ -338,6 +305,47 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.JSONError"
                         }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.JSONError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/task/{id}": {
+            "delete": {
+                "description": "delete task by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task"
+                ],
+                "summary": "Delete task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "task id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
                     "404": {
                         "description": "Not Found",

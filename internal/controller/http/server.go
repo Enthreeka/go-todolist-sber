@@ -33,7 +33,6 @@ func NewServer(log *logger.Logger, services Services, opts ServerOption, store *
 
 	mux.Mount("/", Router(log, services, store))
 	mux.Get("/swagger/*", httpSwagger.Handler(
-		//httpSwagger.URL(opts.Addr+"/swagger/doc.json"),
 		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
 	))
 

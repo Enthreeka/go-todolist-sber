@@ -52,10 +52,24 @@ func (s *sessionRepo) Create(ctx context.Context, session *entity.Session) (*ent
 }
 
 func (s *sessionRepo) GetByToken(ctx context.Context, token string) (*entity.Session, error) {
-	query := `select token, user_id, expires_at from session where token = $1`
+	query := `select s.token, s.user_id, s.expires_at, u.role from session s
+				join "user" u on s.user_id = u.id
+				where token = $1`
+	var session entity.Session
 
-	row := s.Pool.QueryRow(ctx, query, token)
-	return s.collectRow(row)
+	err := s.Pool.QueryRow(ctx, query, token).Scan(&session.Token, &session.UserID, &session.ExpiresAt, &session.Role)
+	if err != nil {
+		errCode := pgxError.ErrorCode(err)
+		if errCode == pgxError.ForeignKeyViolation {
+			return nil, apperror.ErrForeignKeyViolation
+		}
+		if errCode == pgxError.UniqueViolation {
+			return nil, apperror.ErrUniqueViolation
+		}
+		return nil, err
+	}
+
+	return &session, nil
 }
 
 func (s *sessionRepo) Update(ctx context.Context, session *entity.Session) (*entity.Session, error) {
