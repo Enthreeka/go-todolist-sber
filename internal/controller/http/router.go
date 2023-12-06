@@ -28,6 +28,7 @@ func Router(log *logger.Logger, service Services, store *sessions.CookieStore) *
 		r.Route("/user", func(r chi.Router) {
 			r.Post("/register", user.RegisterHandler)
 			r.Post("/login", user.LoginHandler)
+			r.Post("/logout", user.LogoutHandler)
 		})
 		r.With(auth).Route("/task", func(r chi.Router) {
 			r.Get("/list", task.GetTaskHandler)

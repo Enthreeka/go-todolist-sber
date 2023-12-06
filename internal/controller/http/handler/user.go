@@ -94,6 +94,10 @@ func (u *userHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	e.Encode(user)
 }
 
+func (u *userHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	u.authenticated(w, r, "", false)
+}
+
 func (u *userHandler) authenticated(w http.ResponseWriter, r *http.Request, sessionID string, authenticated bool) {
 	session, err := u.store.Get(r, "session.id")
 	if err != nil {
