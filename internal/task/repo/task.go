@@ -106,10 +106,10 @@ func (t *taskRepository) GetAll(ctx context.Context) ([]entity.Task, error) {
 	return t.collectRows(rows)
 }
 
-func (t *taskRepository) DeleteByID(ctx context.Context, userID string, id int) error {
-	query := `delete from task where id = $1 and id_user = $2`
+func (t *taskRepository) DeleteByID(ctx context.Context, id int) error {
+	query := `delete from task where id = $1`
 
-	_, err := t.Pool.Exec(ctx, query, id, userID)
+	_, err := t.Pool.Exec(ctx, query, id)
 	return err
 }
 
@@ -141,4 +141,26 @@ func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, 
 	}
 
 	return t.collectRows(rows)
+}
+
+func (t *taskRepository) GetUserID(ctx context.Context, id int) (int, error) {
+	query := `select user_id from where id = $1`
+	var userID int
+
+	err := t.Pool.QueryRow(ctx, query, id).Scan(&userID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return 0, apperror.ErrNoRows
+		}
+		errCode := pgxError.ErrorCode(err)
+		if errCode == pgxError.ForeignKeyViolation {
+			return 0, apperror.ErrForeignKeyViolation
+		}
+		if errCode == pgxError.UniqueViolation {
+			return 0, apperror.ErrUniqueViolation
+		}
+		return 0, err
+	}
+
+	return userID, nil
 }

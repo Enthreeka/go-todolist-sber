@@ -59,6 +59,9 @@ func (s *sessionRepo) GetByToken(ctx context.Context, token string) (*entity.Ses
 
 	err := s.Pool.QueryRow(ctx, query, token).Scan(&session.Token, &session.UserID, &session.ExpiresAt, &session.Role)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, apperror.ErrNoRows
+		}
 		errCode := pgxError.ErrorCode(err)
 		if errCode == pgxError.ForeignKeyViolation {
 			return nil, apperror.ErrForeignKeyViolation

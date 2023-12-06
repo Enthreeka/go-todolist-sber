@@ -34,8 +34,8 @@ func (t *taskUsecase) UpdateTask(ctx context.Context, task *entity.Task) (*entit
 	return task, nil
 }
 
-func (t *taskUsecase) DeleteTask(ctx context.Context, userID string, id int) error {
-	if err := t.taskRepo.DeleteByID(ctx, userID, id); err != nil {
+func (t *taskUsecase) DeleteTask(ctx context.Context, id int) error {
+	if err := t.taskRepo.DeleteByID(ctx, id); err != nil {
 		return err
 	}
 	return nil
@@ -81,4 +81,9 @@ func (t *taskUsecase) GetFilteredTasks(ctx context.Context, userID string, date 
 	}
 
 	return tasks, nil
+}
+
+func (t *taskUsecase) IsEqualUserID(ctx context.Context, contextUserID string) bool {
+
+	return false
 }

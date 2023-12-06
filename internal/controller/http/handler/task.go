@@ -26,9 +26,9 @@ func NewTaskHandler(taskUsecase task.TaskUsecase, log *logger.Logger) *taskHandl
 }
 
 type TaskRequest struct {
-	Header      string `json:"header"`
-	Description string `json:"description"`
-	StartDate   string `json:"start_date"`
+	Header      string    `json:"header"`
+	Description string    `json:"description"`
+	StartDate   time.Time `json:"start_date"`
 }
 
 // GetTaskHandler godoc
@@ -79,19 +79,12 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	parsedTime, err := time.Parse("02.01.2006 15:04", data.StartDate)
-	if err != nil {
-		t.log.Error("time.Parse: %v", err)
-		ParseTimeError(w)
-		return
-	}
-
 	userID := getUserID(r.Context())
 
 	task := &entity.Task{
 		Header:      data.Header,
 		Description: data.Description,
-		StartDate:   parsedTime,
+		StartDate:   data.StartDate,
 		UserID:      userID,
 	}
 	createdTask, err := t.taskUsecase.CreateTask(context.Background(), task)
@@ -126,9 +119,8 @@ func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 		DecodingError(w)
 		return
 	}
-	userID := getUserID(r.Context())
 
-	if err := t.taskUsecase.DeleteTask(context.Background(), userID, id); err != nil {
+	if err := t.taskUsecase.DeleteTask(context.Background(), id); err != nil {
 		t.log.Error("taskUsecase.DeleteTask: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
@@ -167,21 +159,12 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var parsedTime time.Time
-	if data.StartDate != "" {
-		parsedTime, err = time.Parse("02.01.2006 15:04", data.StartDate)
-		if err != nil {
-			t.log.Error("time.Parse: %v", err)
-			ParseTimeError(w)
-			return
-		}
-	}
 	userID := getUserID(r.Context())
 
 	task := &entity.Task{
 		Header:      data.Header,
 		Description: data.Description,
-		StartDate:   parsedTime,
+		StartDate:   data.StartDate,
 		ID:          id,
 		UserID:      userID,
 	}
@@ -286,15 +269,15 @@ func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *htt
 // @Failure 500 {object} JSONError
 // @Router /task/filter [get]
 func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request) {
-	date := r.URL.Query().Get("datetime")
+	datetime := r.URL.Query().Get("datetime")
 	status, err := strconv.ParseBool(r.URL.Query().Get("status"))
-	if err != nil || date == "" {
+	if err != nil || datetime == "" {
 		t.log.Error("Not correct query result")
 		QueryError(w)
 		return
 	}
 
-	parsedDate, err := time.Parse("02.01.2006 15:04", date)
+	parsedDate, err := time.Parse("02.01.2006 15:04", datetime)
 	if err != nil {
 		t.log.Error("time.Parse: %v", err)
 		ParseTimeError(w)
