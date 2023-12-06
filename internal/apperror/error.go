@@ -41,7 +41,7 @@ func ParseHTTPErrStatusCode(err error) int {
 	case errors.Is(err, ErrNoRows):
 		return http.StatusNotFound
 	case errors.Is(err, ErrHashPasswordsNotEqual):
-		return http.StatusForbidden
+		return http.StatusUnauthorized
 	case errors.Is(err, ErrDataNotValid):
 		return http.StatusUnprocessableEntity
 	}

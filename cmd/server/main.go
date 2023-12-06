@@ -6,6 +6,11 @@ import (
 	"go-todolist-sber/pkg/logger"
 )
 
+// @title Blueprint Swagger API
+// @version 1.0
+// @description Swagger API for to do list
+// @host localhost:8080
+// @BasePath /
 func main() {
 	log := logger.New()
 

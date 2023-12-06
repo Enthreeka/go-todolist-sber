@@ -42,7 +42,7 @@ func AuthMiddleware(sess session.SessionUsecase, store *sessions.CookieStore) mi
 				ctx := context.WithValue(r.Context(), "userID", data.UserID)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			} else {
-				ErrorJSON(w, "Unauthorized", http.StatusUnauthorized)
+				ErrorJSON(w, "Forbidden", http.StatusForbidden)
 				return
 			}
 		})

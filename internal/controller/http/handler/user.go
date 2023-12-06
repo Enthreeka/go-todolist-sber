@@ -32,6 +32,19 @@ type UserRequest struct {
 	Password string `json:"password"`
 }
 
+// RegisterHandler godoc
+// @Summary Register new user
+// @Tags Auth
+// @Description register new user, returns user and set session
+// @Accept json
+// @Produce json
+// @Param input body UserRequest true "user login and password"
+// @Success 201 {object} entity.User
+// @Failure 400 {object} HandleError
+// @Failure 400 {object} DecodingError
+// @Failure 422 {object} HandleError
+// @Failure 500 {object} HandleError
+// @Router /user/register [post]
 func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	data := new(UserRequest)
 	d := json.NewDecoder(r.Body)
@@ -63,6 +76,19 @@ func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	e.Encode(user)
 }
 
+// LoginHandler godoc
+// @Summary Login user
+// @Tags Auth
+// @Description login user,returns user and set session
+// @Accept json
+// @Produce json
+// @Param input body UserRequest true "user login and password"
+// @Success 200 {object} entity.User
+// @Failure 400 {object} DecodingError
+// @Failure 401 {object} HandleError
+// @Failure 404 {object} HandleError
+// @Failure 500 {object} HandleError
+// @Router /user/login [post]
 func (u *userHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	data := new(UserRequest)
 	d := json.NewDecoder(r.Body)
@@ -94,8 +120,17 @@ func (u *userHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	e.Encode(user)
 }
 
+// LogoutHandler godoc
+// @Summary Logout user
+// @Tags Auth
+// @Description logout user removing session
+// @Accept json
+// @Produce json
+// @Success 200
+// @Router /user/logout [post]
 func (u *userHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	u.authenticated(w, r, "", false)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (u *userHandler) authenticated(w http.ResponseWriter, r *http.Request, sessionID string, authenticated bool) {
