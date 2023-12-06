@@ -108,19 +108,34 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Produce json
 // @Param id path int true "task id"
 // @Success 204
+// @Failure 403 {object} JSONError
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
 // @Router /task/{id} [delete]
 func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(param)
+	taskID, err := strconv.Atoi(param)
 	if err != nil {
 		t.log.Error("strconv.Atoi: %v", err)
 		DecodingError(w)
 		return
 	}
 
-	if err := t.taskUsecase.DeleteTask(context.Background(), id); err != nil {
+	userID := getUserID(r.Context())
+
+	equal, err := t.taskUsecase.IsEqualUserID(context.Background(), userID, taskID)
+	if err != nil {
+		t.log.Error("taskUsecase.IsEqualUserID: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	if !equal {
+		AccessError(w)
+		return
+	}
+
+	if err := t.taskUsecase.DeleteTask(context.Background(), taskID); err != nil {
 		t.log.Error("taskUsecase.DeleteTask: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
@@ -138,12 +153,13 @@ func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Param input body TaskRequest true "task attribute"
 // @Success 200 {object} entity.Task
 // @Failure 400 {object} JSONError
+// @Failure 403 {object} JSONError
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
 // @Router /task/delete [put]
 func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(param)
+	taskID, err := strconv.Atoi(param)
 	if err != nil {
 		t.log.Error("strconv.Atoi: %v", err)
 		DecodingError(w)
@@ -161,11 +177,23 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 
 	userID := getUserID(r.Context())
 
+	equal, err := t.taskUsecase.IsEqualUserID(context.Background(), userID, taskID)
+	if err != nil {
+		t.log.Error("taskUsecase.IsEqualUserID: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	if !equal {
+		AccessError(w)
+		return
+	}
+
 	task := &entity.Task{
 		Header:      data.Header,
 		Description: data.Description,
 		StartDate:   data.StartDate,
-		ID:          id,
+		ID:          taskID,
 		UserID:      userID,
 	}
 	updatedTask, err := t.taskUsecase.UpdateTask(context.Background(), task)
@@ -184,7 +212,7 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // GetAllTasksHandler godoc
 // @Summary Get all task
 // @Tags Task
-// @Description Get all users tasks
+// @Description Get all users tasks, available only to the admin
 // @Accept json
 // @Produce json
 // @Success 200 {object} []entity.Task
@@ -195,7 +223,7 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request) {
 	role := getRole(r.Context())
 	if role != "admin" {
-		ErrorJSON(w, "access denied", http.StatusForbidden)
+		AccessError(w)
 		return
 	}
 

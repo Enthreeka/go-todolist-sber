@@ -83,7 +83,15 @@ func (t *taskUsecase) GetFilteredTasks(ctx context.Context, userID string, date 
 	return tasks, nil
 }
 
-func (t *taskUsecase) IsEqualUserID(ctx context.Context, contextUserID string) bool {
+func (t *taskUsecase) IsEqualUserID(ctx context.Context, contextUserID string, taskID int) (bool, error) {
+	userID, err := t.taskRepo.GetUserID(ctx, taskID)
+	if err != nil {
+		return false, err
+	}
 
-	return false
+	if userID != contextUserID {
+		return false, nil
+	}
+
+	return true, nil
 }

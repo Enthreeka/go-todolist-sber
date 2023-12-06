@@ -143,23 +143,23 @@ func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, 
 	return t.collectRows(rows)
 }
 
-func (t *taskRepository) GetUserID(ctx context.Context, id int) (int, error) {
+func (t *taskRepository) GetUserID(ctx context.Context, id int) (string, error) {
 	query := `select user_id from where id = $1`
-	var userID int
+	var userID string
 
 	err := t.Pool.QueryRow(ctx, query, id).Scan(&userID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return 0, apperror.ErrNoRows
+			return "", apperror.ErrNoRows
 		}
 		errCode := pgxError.ErrorCode(err)
 		if errCode == pgxError.ForeignKeyViolation {
-			return 0, apperror.ErrForeignKeyViolation
+			return "", apperror.ErrForeignKeyViolation
 		}
 		if errCode == pgxError.UniqueViolation {
-			return 0, apperror.ErrUniqueViolation
+			return "", apperror.ErrUniqueViolation
 		}
-		return 0, err
+		return "", err
 	}
 
 	return userID, nil

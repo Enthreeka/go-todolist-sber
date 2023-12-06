@@ -14,5 +14,5 @@ type TaskUsecase interface {
 	DeleteTask(ctx context.Context, id int) error
 	GetUserTasks(ctx context.Context, userID string) ([]entity.Task, error)
 	GetAllTasks(ctx context.Context) ([]entity.Task, error)
-	IsEqualUserID(ctx context.Context, contextUserID string) bool
+	IsEqualUserID(ctx context.Context, contextUserID string, taskID int) (bool, error)
 }

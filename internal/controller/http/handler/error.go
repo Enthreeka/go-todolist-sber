@@ -36,3 +36,7 @@ func DecodingError(w http.ResponseWriter) {
 func QueryError(w http.ResponseWriter) {
 	ErrorJSON(w, "query request not correct", http.StatusBadRequest)
 }
+
+func AccessError(w http.ResponseWriter) {
+	ErrorJSON(w, "access denied", http.StatusForbidden)
+}
