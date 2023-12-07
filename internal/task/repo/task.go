@@ -183,13 +183,15 @@ func (t *taskRepository) GetPageByStatusAndUserID(ctx context.Context, userID st
 	return t.collectRows(rows)
 }
 
-func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, date time.Time, status bool) ([]entity.Task, error) {
+func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, date time.Time, status bool, offset int) ([]entity.Task, error) {
 	query := `select id, id_user, header, description, created_at, start_date, done
 				from task
 				where id_user = $1 and done = $2 and start_date = $3
-				order by id desc`
+				order by id desc
+				offset $4
+				limit 3`
 
-	rows, err := t.Pool.Query(ctx, query, userID, status, date)
+	rows, err := t.Pool.Query(ctx, query, userID, status, date, offset)
 	if err != nil {
 		return nil, err
 	}
