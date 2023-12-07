@@ -6,7 +6,7 @@ import (
 )
 
 type TaskUsecase interface {
-	GetTaskWithPaginationAndFilter(ctx context.Context, userID string, option *entity.ParamOption) ([]entity.Task, error)
+	GetTask(ctx context.Context, userID string, option *entity.ParamOption) ([]entity.Task, error)
 	CreateTask(ctx context.Context, task *entity.Task) (*entity.Task, error)
 	UpdateTask(ctx context.Context, task *entity.Task) (*entity.Task, error)
 	DeleteTask(ctx context.Context, id int) error

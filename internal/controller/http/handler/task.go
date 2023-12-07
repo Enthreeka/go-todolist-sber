@@ -87,68 +87,9 @@ func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	userID := getUserID(r.Context())
 
-	tasks, err := t.taskUsecase.GetTaskWithPaginationAndFilter(context.Background(), userID, opt)
+	tasks, err := t.taskUsecase.GetTask(context.Background(), userID, opt)
 	if err != nil {
 		t.log.Error("taskUsecase.GetTaskWithPaginationAndFilter: %v", err)
-		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	e := json.NewEncoder(w)
-	e.SetIndent(" ", " ")
-	e.Encode(tasks)
-}
-
-// GetUserTaskHandler godoc
-// @Summary Get user task
-// @Tags Task
-// @Description get user task by userID from context, you can also make a filter for time and status, return tasks
-// @Accept json
-// @Produce json
-// @Param datetime query string false "date and time required tasks" Format(datetime)
-// @Param status query boolean false "task status" Format(status)
-// @Success 200 {object} []entity.Task
-// @Failure 400 {object} JSONError
-// @Failure 404 {object} JSONError
-// @Failure 500 {object} JSONError
-// @Router /tasks/list [get]
-func (t *taskHandler) GetUserTaskHandler(w http.ResponseWriter, r *http.Request) {
-	opt := new(entity.ParamOption)
-
-	datetime := r.URL.Query().Get("datetime")
-	if datetime != "" {
-		parsedDate, err := time.Parse("02.01.2006 15:04", datetime)
-		if err != nil {
-			t.log.Error("time.Parse: %v", err)
-			ParseTimeError(w)
-			return
-		}
-		opt.DateTime = parsedDate
-	}
-
-	statusString := r.URL.Query().Get("status")
-	if statusString != "" {
-		status, err := strconv.ParseBool(statusString)
-		if err != nil || statusString == "" {
-			t.log.Error("Not correct query result")
-			QueryError(w)
-			return
-		}
-		opt.Status = &status
-	}
-
-	if datetime == "" || statusString == "" {
-		t.log.Error("Not correct query result")
-		QueryError(w)
-		return
-	}
-
-	userID := getUserID(r.Context())
-
-	tasks, err := t.taskUsecase.GetUserTasks(context.Background(), userID, opt)
-	if err != nil {
-		t.log.Error("taskUsecase.GetUserTasks: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
 		return
 	}
@@ -412,4 +353,50 @@ func getRole(ctx context.Context) string {
 	role, _ := ctx.Value("role").(string)
 
 	return role
+}
+
+func (t *taskHandler) GetUserTaskHandler(w http.ResponseWriter, r *http.Request) {
+	opt := new(entity.ParamOption)
+
+	datetime := r.URL.Query().Get("datetime")
+	if datetime != "" {
+		parsedDate, err := time.Parse("02.01.2006 15:04", datetime)
+		if err != nil {
+			t.log.Error("time.Parse: %v", err)
+			ParseTimeError(w)
+			return
+		}
+		opt.DateTime = parsedDate
+	}
+
+	statusString := r.URL.Query().Get("status")
+	if statusString != "" {
+		status, err := strconv.ParseBool(statusString)
+		if err != nil || statusString == "" {
+			t.log.Error("Not correct query result")
+			QueryError(w)
+			return
+		}
+		opt.Status = &status
+	}
+
+	if datetime == "" || statusString == "" {
+		t.log.Error("Not correct query result")
+		QueryError(w)
+		return
+	}
+
+	userID := getUserID(r.Context())
+
+	tasks, err := t.taskUsecase.GetUserTasks(context.Background(), userID, opt)
+	if err != nil {
+		t.log.Error("taskUsecase.GetUserTasks: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
+	e.Encode(tasks)
 }

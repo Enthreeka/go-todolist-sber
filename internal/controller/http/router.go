@@ -32,7 +32,6 @@ func Router(log *logger.Logger, service Services, store *sessions.CookieStore) *
 		})
 		r.With(auth).Route("/tasks", func(r chi.Router) {
 			r.Get("/", task.GetTaskHandler)
-			r.Get("/list", task.GetUserTaskHandler)
 			r.Post("/add", task.CreateTaskHandler)
 			r.Delete("/{id}", task.DeleteTaskHandler)
 			r.Put("/{id}", task.UpdateTaskHandler)

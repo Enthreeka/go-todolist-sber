@@ -290,47 +290,6 @@ paths:
       summary: Get all users task
       tags:
       - Task
-  /tasks/list:
-    get:
-      consumes:
-      - application/json
-      description: get user task by userID from context, you can also make a filter
-        for time and status, return tasks
-      parameters:
-      - description: date and time required tasks
-        format: datetime
-        in: query
-        name: datetime
-        type: string
-      - description: task status
-        format: status
-        in: query
-        name: status
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.Task'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-      summary: Get user task
-      tags:
-      - Task
   /user/login:
     post:
       consumes:

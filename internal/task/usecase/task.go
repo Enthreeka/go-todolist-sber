@@ -102,44 +102,55 @@ func (t *taskUsecase) UpdateTaskStatus(ctx context.Context, status bool, taskID 
 	return task, nil
 }
 
-func (t *taskUsecase) GetTaskWithPaginationAndFilter(ctx context.Context, userID string, option *entity.ParamOption) ([]entity.Task, error) {
-	if option.Page == 0 {
-		option.Page = 1
-	}
-
+func (t *taskUsecase) GetTask(ctx context.Context, userID string, option *entity.ParamOption) ([]entity.Task, error) {
 	offset := (option.Page - 1) * 3
-	if !option.DateTime.IsZero() && option.Status != nil {
+
+	switch {
+	case !option.DateTime.IsZero() && option.Status != nil && option.Page > 0: // Пагианция по статусу и времени
 		tasks, err := t.taskRepo.GetByDateAndStatusWithOffset(ctx, userID, option.DateTime, *option.Status, offset)
 		if err != nil {
 			return nil, err
 		}
 
-		if tasks == nil || len(tasks) == 0 {
-			return nil, apperror.ErrNoRows
-		}
-
 		return tasks, nil
-	} else if option.Status != nil {
-		tasks, err := t.taskRepo.GetPageByStatusAndUserID(ctx, userID, *option.Status, offset)
+	case option.DateTime.IsZero() && option.Status != nil && option.Page > 0: // Пагинация по статусу
+		tasks, err := t.taskRepo.GetByStatusWithOffset(ctx, userID, *option.Status, offset)
 		if err != nil {
 			return nil, err
 		}
 
-		if tasks == nil || len(tasks) == 0 {
-			return nil, apperror.ErrNoRows
+		return tasks, nil
+	case option.DateTime.IsZero() && option.Status == nil && option.Page > 0: // Просто пагинация
+		tasks, err := t.taskRepo.GetByUserIDWithOffset(ctx, userID, offset)
+		if err != nil {
+			return nil, err
+		}
+
+		return tasks, nil
+	case !option.DateTime.IsZero() && option.Status != nil && option.Page < 0: // Без пагинации по статусу и времени
+		tasks, err := t.taskRepo.GetByDateAndStatus(ctx, userID, option.DateTime, *option.Status)
+		if err != nil {
+			return nil, err
+		}
+
+		return tasks, nil
+	case option.DateTime.IsZero() && option.Status != nil && option.Page < 0: // Без пагинации по статусу
+		tasks, err := t.taskRepo.GetByStatus(ctx, userID, *option.Status)
+		if err != nil {
+			return nil, err
+		}
+
+		return tasks, nil
+	default: // Cписок всех тасок
+		tasks, err := t.taskRepo.GetByUserID(ctx, userID)
+		if err != nil {
+			return nil, err
 		}
 
 		return tasks, nil
 	}
-
-	tasks, err := t.taskRepo.GetByUserIDWithOffset(ctx, userID, offset)
-	if err != nil {
-		return nil, err
-	}
-
-	if tasks == nil || len(tasks) == 0 {
-		return nil, apperror.ErrNoRows
-	}
-
-	return tasks, nil
 }
+
+//if tasks == nil || len(tasks) == 0 {
+//return nil, apperror.ErrNoRows
+//}

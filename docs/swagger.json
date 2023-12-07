@@ -172,66 +172,6 @@
                 }
             }
         },
-        "/tasks/list": {
-            "get": {
-                "description": "get user task by userID from context, you can also make a filter for time and status, return tasks",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Task"
-                ],
-                "summary": "Get user task",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "datetime",
-                        "description": "date and time required tasks",
-                        "name": "datetime",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "format": "status",
-                        "description": "task status",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Task"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    }
-                }
-            }
-        },
         "/tasks/{id}": {
             "put": {
                 "description": "Update header, description, datetime, task status by userID from context, return updated task",
