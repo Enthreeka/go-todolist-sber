@@ -15,4 +15,5 @@ type TaskUsecase interface {
 	GetUserTasks(ctx context.Context, userID string) ([]entity.Task, error)
 	GetAllTasks(ctx context.Context) ([]entity.Task, error)
 	IsEqualUserID(ctx context.Context, contextUserID string, taskID int) (bool, error)
+	UpdateTaskStatus(ctx context.Context, status bool, taskID int) (*entity.Task, error)
 }

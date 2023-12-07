@@ -35,6 +35,11 @@ definitions:
       status:
         type: string
     type: object
+  handler.StatusRequest:
+    properties:
+      status:
+        type: boolean
+    type: object
   handler.TaskRequest:
     properties:
       description:
@@ -58,7 +63,7 @@ info:
   title: Blueprint Swagger API
   version: "1.0"
 paths:
-  /task/{id}:
+  /task/{id}/delete:
     delete:
       consumes:
       - application/json
@@ -74,6 +79,10 @@ paths:
       responses:
         "204":
           description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.JSONError'
         "404":
           description: Not Found
           schema:
@@ -83,6 +92,94 @@ paths:
           schema:
             $ref: '#/definitions/handler.JSONError'
       summary: Delete task
+      tags:
+      - Task
+  /task/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Set to task completed or not by userID from context, return updated
+        task
+      parameters:
+      - description: task id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: task attribute
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.StatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Task'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Set status
+      tags:
+      - Task
+  /task/{id}/update:
+    put:
+      consumes:
+      - application/json
+      description: Update header, description, datetime, task status by userID from
+        context, return updated task
+      parameters:
+      - description: task id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: task attribute
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Task'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Update task
       tags:
       - Task
   /task/add:
@@ -123,7 +220,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all users tasks
+      description: Get all users tasks, available only to the admin
       produces:
       - application/json
       responses:
@@ -146,41 +243,6 @@ paths:
           schema:
             $ref: '#/definitions/handler.JSONError'
       summary: Get all task
-      tags:
-      - Task
-  /task/delete:
-    put:
-      consumes:
-      - application/json
-      description: Update header, description, datetime, task status by userID from
-        context, return updated task
-      parameters:
-      - description: task attribute
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handler.TaskRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.Task'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.JSONError'
-      summary: Update task
       tags:
       - Task
   /task/filter:

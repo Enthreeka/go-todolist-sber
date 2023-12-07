@@ -31,6 +31,10 @@ type TaskRequest struct {
 	StartDate   time.Time `json:"start_date"`
 }
 
+type StatusRequest struct {
+	Status bool `json:"status"`
+}
+
 // GetTaskHandler godoc
 // @Summary Get user task
 // @Tags Task
@@ -111,7 +115,7 @@ func (t *taskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Failure 403 {object} JSONError
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
-// @Router /task/{id} [delete]
+// @Router /task/{id}/delete [delete]
 func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "id")
 	taskID, err := strconv.Atoi(param)
@@ -150,13 +154,14 @@ func (t *taskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Description Update header, description, datetime, task status by userID from context, return updated task
 // @Accept json
 // @Produce json
+// @Param id path int true "task id"
 // @Param input body TaskRequest true "task attribute"
 // @Success 200 {object} entity.Task
 // @Failure 400 {object} JSONError
 // @Failure 403 {object} JSONError
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
-// @Router /task/delete [put]
+// @Router /task/{id}/update [put]
 func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "id")
 	taskID, err := strconv.Atoi(param)
@@ -271,12 +276,6 @@ func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if len(tasks) == 0 {
-		t.log.Error("tasks = 0")
-		HandleError(w, apperror.ErrNotFound, http.StatusNotFound)
-		return
-	}
-
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
 	e.SetIndent(" ", " ")
@@ -325,6 +324,65 @@ func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request)
 	e := json.NewEncoder(w)
 	e.SetIndent(" ", " ")
 	e.Encode(tasks)
+}
+
+// SetStatusHandler godoc
+// @Summary Set status
+// @Tags Task
+// @Description Set to task completed or not by userID from context, return updated task
+// @Accept json
+// @Produce json
+// @Param id path int true "task id"
+// @Param input body StatusRequest true "task attribute"
+// @Success 200 {object} entity.Task
+// @Failure 400 {object} JSONError
+// @Failure 403 {object} JSONError
+// @Failure 404 {object} JSONError
+// @Failure 500 {object} JSONError
+// @Router /task/{id}/status [put]
+func (t *taskHandler) SetStatusHandler(w http.ResponseWriter, r *http.Request) {
+	param := chi.URLParam(r, "id")
+	taskID, err := strconv.Atoi(param)
+	if err != nil {
+		t.log.Error("strconv.Atoi: %v", err)
+		DecodingError(w)
+		return
+	}
+
+	data := new(StatusRequest)
+	d := json.NewDecoder(r.Body)
+	err = d.Decode(&data)
+	if err != nil {
+		t.log.Error("json.NewDecoder: %v", err)
+		DecodingError(w)
+		return
+	}
+
+	userID := getUserID(r.Context())
+
+	equal, err := t.taskUsecase.IsEqualUserID(context.Background(), userID, taskID)
+	if err != nil {
+		t.log.Error("taskUsecase.IsEqualUserID: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	if !equal {
+		AccessError(w)
+		return
+	}
+
+	updatedTask, err := t.taskUsecase.UpdateTaskStatus(context.Background(), data.Status, taskID)
+	if err != nil {
+		t.log.Error("taskUsecase.UpdateTaskStatus: %v", err)
+		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	e := json.NewEncoder(w)
+	e.SetIndent(" ", " ")
+	e.Encode(updatedTask)
 }
 
 func getUserID(ctx context.Context) string {

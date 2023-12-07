@@ -32,4 +32,4 @@ create table if not exists session(
         references "user" (id) on delete cascade
 );
 
-update "user" set role = 'admin' where id = '386aa553-0285-4150-a8df-5f9e65107b72';
+update "user" set role = 'admin' where login = '1234567';

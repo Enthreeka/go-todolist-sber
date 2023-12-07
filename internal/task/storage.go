@@ -14,5 +14,6 @@ type TaskRepository interface {
 	Update(ctx context.Context, task *entity.Task) (*entity.Task, error)
 	GetAll(ctx context.Context) ([]entity.Task, error)
 	DeleteByID(ctx context.Context, id int) error
-	GetUserID(ctx context.Context, id int) (string, error)
+	GetByID(ctx context.Context, id int) (*entity.Task, error)
+	UpdateDone(ctx context.Context, status bool, taskID int) (*entity.Task, error)
 }

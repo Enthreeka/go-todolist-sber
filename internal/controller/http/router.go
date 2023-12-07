@@ -33,8 +33,9 @@ func Router(log *logger.Logger, service Services, store *sessions.CookieStore) *
 		r.With(auth).Route("/task", func(r chi.Router) {
 			r.Get("/list", task.GetTaskHandler)
 			r.Post("/add", task.CreateTaskHandler)
-			r.Delete("/{id}", task.DeleteTaskHandler)
-			r.Put("/{id}", task.UpdateTaskHandler)
+			r.Delete("/{id}/delete", task.DeleteTaskHandler)
+			r.Put("/{id}/update", task.UpdateTaskHandler)
+			r.Put("/{id}/status", task.SetStatusHandler)
 			r.Get("/all", task.GetAllTasksHandler)
 			r.Get("/pagination", task.GetTaskWithPaginationHandler)
 			r.Get("/filter", task.GetFilteredHandler)

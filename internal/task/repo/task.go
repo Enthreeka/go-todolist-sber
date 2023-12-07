@@ -36,7 +36,6 @@ func (t *taskRepository) collectRow(row pgx.Row) (*entity.Task, error) {
 	if errCode == pgxError.UniqueViolation {
 		return nil, apperror.ErrUniqueViolation
 	}
-
 	return &task, err
 }
 
@@ -47,34 +46,89 @@ func (t *taskRepository) collectRows(rows pgx.Rows) ([]entity.Task, error) {
 	})
 }
 
+//	func (t *taskRepository) Update(ctx context.Context, task *entity.Task) (*entity.Task, error) {
+//		var builder strings.Builder
+//		increment := 1
+//		attribute := []interface{}{}
+//
+//		builder.WriteString(`update task set `)
+//
+//		//attribute = append(attribute, task.Done)
+//		//builder.WriteString(fmt.Sprintf(`done = $%d `, increment))
+//
+//		if task.Header != "" {
+//			increment++
+//			attribute = append(attribute, task.Header)
+//			builder.WriteString(fmt.Sprintf(`header = $%d `, increment))
+//		}
+//		if task.Description != "" {
+//
+//			increment++
+//			attribute = append(attribute, task.Description)
+//			builder.WriteString(fmt.Sprintf(`,description = $%d `, increment))
+//		}
+//		if !task.StartDate.IsZero() {
+//			increment++
+//			attribute = append(attribute, task.StartDate)
+//			builder.WriteString(fmt.Sprintf(`,created_at = $%d `, increment))
+//		}
+//
+//		increment++
+//		builder.WriteString(fmt.Sprintf(`where id = $%d returning *`, increment))
+//
+//		attribute = append(attribute, task.ID)
+//		row := t.Pool.QueryRow(ctx, builder.String(), attribute...)
+//
+//		return t.collectRow(row)
+//	}
 func (t *taskRepository) Update(ctx context.Context, task *entity.Task) (*entity.Task, error) {
 	var builder strings.Builder
-	var increment int
+	increment := 0
 	attribute := []interface{}{}
 
 	builder.WriteString(`update task set `)
 
-	if task.Header != "" {
-		increment++
-		attribute = append(attribute, task.Header)
-		builder.WriteString(fmt.Sprintf(`header = $%d `, increment))
+	attributesToUpdate := []struct {
+		name  string
+		value interface{}
+	}{
+		{"header", task.Header},
+		{"description", task.Description},
+		{"created_at", task.StartDate},
 	}
-	if task.Description != "" {
-		increment++
-		attribute = append(attribute, task.Description)
-		builder.WriteString(fmt.Sprintf(`,description = $%d `, increment))
+
+	commaAdded := false
+
+	for _, attr := range attributesToUpdate {
+		if !isEmpty(attr.value) {
+			if commaAdded {
+				builder.WriteString(", ")
+			}
+			builder.WriteString(fmt.Sprintf(`%s = $%d`, attr.name, increment))
+			attribute = append(attribute, attr.value)
+			increment++
+			commaAdded = true
+		}
 	}
-	if !task.StartDate.IsZero() {
-		increment++
-		attribute = append(attribute, task.StartDate)
-		builder.WriteString(fmt.Sprintf(`,created_at = $%d `, increment))
-	}
+
 	increment++
-	builder.WriteString(fmt.Sprintf(`where id = $%d returning *`, increment))
+	builder.WriteString(fmt.Sprintf(` where id = $%d returning *`, increment))
+
 	attribute = append(attribute, task.ID)
 	row := t.Pool.QueryRow(ctx, builder.String(), attribute...)
 
 	return t.collectRow(row)
+}
+
+func isEmpty(value interface{}) bool {
+	switch v := value.(type) {
+	case string:
+		return v == ""
+	case time.Time:
+		return v.IsZero()
+	default:
+		return true
+	}
 }
 
 func (t *taskRepository) Create(ctx context.Context, task *entity.Task) (*entity.Task, error) {
@@ -143,24 +197,17 @@ func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, 
 	return t.collectRows(rows)
 }
 
-func (t *taskRepository) GetUserID(ctx context.Context, id int) (string, error) {
-	query := `select user_id from where id = $1`
-	var userID string
+func (t *taskRepository) GetByID(ctx context.Context, id int) (*entity.Task, error) {
+	query := `select id, id_user, header, description, created_at, start_date, done
+				from task where id = $1`
 
-	err := t.Pool.QueryRow(ctx, query, id).Scan(&userID)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return "", apperror.ErrNoRows
-		}
-		errCode := pgxError.ErrorCode(err)
-		if errCode == pgxError.ForeignKeyViolation {
-			return "", apperror.ErrForeignKeyViolation
-		}
-		if errCode == pgxError.UniqueViolation {
-			return "", apperror.ErrUniqueViolation
-		}
-		return "", err
-	}
+	row := t.Pool.QueryRow(ctx, query, id)
+	return t.collectRow(row)
+}
 
-	return userID, nil
+func (t *taskRepository) UpdateDone(ctx context.Context, status bool, taskID int) (*entity.Task, error) {
+	query := `update task set done = $1 where id = $2 returning *`
+
+	row := t.Pool.QueryRow(ctx, query, status, taskID)
+	return t.collectRow(row)
 }

@@ -60,6 +60,10 @@ func (t *taskUsecase) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 		return nil, err
 	}
 
+	if tasks == nil || len(tasks) == 0 {
+		return nil, apperror.ErrNoRows
+	}
+
 	return tasks, nil
 }
 
@@ -71,6 +75,9 @@ func (t *taskUsecase) PaginationTasks(ctx context.Context, userID string, status
 		return nil, err
 	}
 
+	if tasks == nil || len(tasks) == 0 {
+		return nil, apperror.ErrNoRows
+	}
 	return tasks, nil
 }
 
@@ -80,18 +87,31 @@ func (t *taskUsecase) GetFilteredTasks(ctx context.Context, userID string, date 
 		return nil, err
 	}
 
+	if tasks == nil || len(tasks) == 0 {
+		return nil, apperror.ErrNoRows
+	}
+
 	return tasks, nil
 }
 
 func (t *taskUsecase) IsEqualUserID(ctx context.Context, contextUserID string, taskID int) (bool, error) {
-	userID, err := t.taskRepo.GetUserID(ctx, taskID)
+	data, err := t.taskRepo.GetByID(ctx, taskID)
 	if err != nil {
 		return false, err
 	}
 
-	if userID != contextUserID {
+	if data.UserID != contextUserID {
 		return false, nil
 	}
 
 	return true, nil
+}
+
+func (t *taskUsecase) UpdateTaskStatus(ctx context.Context, status bool, taskID int) (*entity.Task, error) {
+	task, err := t.taskRepo.UpdateDone(ctx, status, taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
 }
