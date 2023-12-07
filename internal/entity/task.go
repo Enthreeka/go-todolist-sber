@@ -11,3 +11,9 @@ type Task struct {
 	CreatedAt   time.Time `json:"created_at"`
 	StartDate   time.Time `json:"start_date"`
 }
+
+type ParamOption struct {
+	Page     int
+	Status   *bool
+	DateTime time.Time
+}

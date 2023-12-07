@@ -35,24 +35,22 @@ type StatusRequest struct {
 	Status bool `json:"status"`
 }
 
-type ParamOption struct {
-	Page     int
-	Status   bool
-	DateTime time.Time
-}
-
 // GetTaskHandler godoc
-// @Summary Get user task
+// @Summary Get user task with filter
 // @Tags Task
-// @Description get user task by userID from context, return tasks
+// @Description get user task with pagination and filter, by default without parameters return first page
 // @Accept json
 // @Produce json
+// @Param page query int false "page number" Format(page)
+// @Param datetime query string false "date and time required tasks" Format(datetime)
+// @Param status query boolean false "task status" Format(status)
 // @Success 200 {object} []entity.Task
+// @Failure 400 {object} JSONError
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
-// @Router /tasks/list [get]
+// @Router /tasks [get]
 func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var opt ParamOption
+	opt := new(entity.ParamOption)
 
 	pageString := r.URL.Query().Get("page")
 	if pageString != "" {
@@ -77,17 +75,19 @@ func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	statusString := r.URL.Query().Get("status")
-	status, err := strconv.ParseBool(statusString)
-	if err != nil || statusString == "" {
-		t.log.Error("Not correct query result")
-		QueryError(w)
-		return
+	if statusString != "" {
+		status, err := strconv.ParseBool(statusString)
+		if err != nil || statusString == "" {
+			t.log.Error("Not correct query result")
+			QueryError(w)
+			return
+		}
+		opt.Status = &status
 	}
-	opt.Status = status
 
 	userID := getUserID(r.Context())
 
-	tasks, err := t.taskUsecase.GetTaskWithPaginationAndFilter(context.Background(), userID, &opt)
+	tasks, err := t.taskUsecase.GetTaskWithPaginationAndFilter(context.Background(), userID, opt)
 	if err != nil {
 		t.log.Error("taskUsecase.GetTaskWithPaginationAndFilter: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
@@ -103,17 +103,50 @@ func (t *taskHandler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 // GetUserTaskHandler godoc
 // @Summary Get user task
 // @Tags Task
-// @Description get user task by userID from context, return tasks
+// @Description get user task by userID from context, you can also make a filter for time and status, return tasks
 // @Accept json
 // @Produce json
+// @Param datetime query string false "date and time required tasks" Format(datetime)
+// @Param status query boolean false "task status" Format(status)
 // @Success 200 {object} []entity.Task
+// @Failure 400 {object} JSONError
 // @Failure 404 {object} JSONError
 // @Failure 500 {object} JSONError
 // @Router /tasks/list [get]
 func (t *taskHandler) GetUserTaskHandler(w http.ResponseWriter, r *http.Request) {
+	opt := new(entity.ParamOption)
+
+	datetime := r.URL.Query().Get("datetime")
+	if datetime != "" {
+		parsedDate, err := time.Parse("02.01.2006 15:04", datetime)
+		if err != nil {
+			t.log.Error("time.Parse: %v", err)
+			ParseTimeError(w)
+			return
+		}
+		opt.DateTime = parsedDate
+	}
+
+	statusString := r.URL.Query().Get("status")
+	if statusString != "" {
+		status, err := strconv.ParseBool(statusString)
+		if err != nil || statusString == "" {
+			t.log.Error("Not correct query result")
+			QueryError(w)
+			return
+		}
+		opt.Status = &status
+	}
+
+	if datetime == "" || statusString == "" {
+		t.log.Error("Not correct query result")
+		QueryError(w)
+		return
+	}
+
 	userID := getUserID(r.Context())
 
-	tasks, err := t.taskUsecase.GetUserTasks(context.Background(), userID)
+	tasks, err := t.taskUsecase.GetUserTasks(context.Background(), userID, opt)
 	if err != nil {
 		t.log.Error("taskUsecase.GetUserTasks: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
@@ -280,7 +313,7 @@ func (t *taskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 // GetAllTasksHandler godoc
-// @Summary Get all task
+// @Summary Get all users task
 // @Tags Task
 // @Description Get all users tasks, available only to the admin
 // @Accept json
@@ -309,87 +342,6 @@ func (t *taskHandler) GetAllTasksHandler(w http.ResponseWriter, r *http.Request)
 	e.SetIndent(" ", " ")
 	e.Encode(tasks)
 }
-
-// GetTaskWithPaginationHandler godoc
-// @Summary Get tasks
-// @Tags Task
-// @Description Get user task with pagination by userID from context
-// @Accept json
-// @Produce json
-// @Param page query int false "page number" Format(page)
-// @Param status query boolean false "task status" Format(status)
-// @Success 200 {object} []entity.Task
-// @Failure 400 {object} JSONError
-// @Failure 404 {object} JSONError
-// @Failure 500 {object} JSONError
-// @Router /tasks/pagination [get]
-//func (t *taskHandler) GetTaskWithPaginationHandler(w http.ResponseWriter, r *http.Request) {
-//	page, errPage := strconv.Atoi(r.URL.Query().Get("page"))
-//	status, errStatus := strconv.ParseBool(r.URL.Query().Get("status"))
-//	if errPage != nil || errStatus != nil {
-//		t.log.Error("Empty query result")
-//		QueryError(w)
-//		return
-//	}
-//
-//	userID := getUserID(r.Context())
-//
-//	tasks, err := t.taskUsecase.PaginationTasks(context.Background(), userID, status, page)
-//	if err != nil {
-//		t.log.Error("taskUsecase.PaginationTasks: %v", err)
-//		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
-//		return
-//	}
-//
-//	w.WriteHeader(http.StatusOK)
-//	e := json.NewEncoder(w)
-//	e.SetIndent(" ", " ")
-//	e.Encode(tasks)
-//}
-
-// GetFilteredHandler godoc
-// @Summary Get task
-// @Tags Task
-// @Description Get user task with filter
-// @Accept json
-// @Produce json
-// @Param datetime query string false "date and time required tasks" Format(datetime)
-// @Param status query boolean false "task status" Format(status)
-// @Success 200 {object} []entity.Task
-// @Failure 400 {object} JSONError
-// @Failure 404 {object} JSONError
-// @Failure 500 {object} JSONError
-// @Router /tasks/filter [get]
-//func (t *taskHandler) GetFilteredHandler(w http.ResponseWriter, r *http.Request) {
-//	datetime := r.URL.Query().Get("datetime")
-//	status, err := strconv.ParseBool(r.URL.Query().Get("status"))
-//	if err != nil || datetime == "" {
-//		t.log.Error("Not correct query result")
-//		QueryError(w)
-//		return
-//	}
-//
-//	parsedDate, err := time.Parse("02.01.2006 15:04", datetime)
-//	if err != nil {
-//		t.log.Error("time.Parse: %v", err)
-//		ParseTimeError(w)
-//		return
-//	}
-//
-//	userID := getUserID(r.Context())
-//
-//	tasks, err := t.taskUsecase.GetFilteredTasks(context.Background(), userID, parsedDate, status)
-//	if err != nil {
-//		t.log.Error("taskUsecase.GetFilteredTasks: %v", err)
-//		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
-//		return
-//	}
-//
-//	w.WriteHeader(http.StatusOK)
-//	e := json.NewEncoder(w)
-//	e.SetIndent(" ", " ")
-//	e.Encode(tasks)
-//}
 
 // UpdateStatusHandler godoc
 // @Summary Set status

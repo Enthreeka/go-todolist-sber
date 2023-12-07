@@ -46,41 +46,6 @@ func (t *taskRepository) collectRows(rows pgx.Rows) ([]entity.Task, error) {
 	})
 }
 
-//	func (t *taskRepository) Update(ctx context.Context, task *entity.Task) (*entity.Task, error) {
-//		var builder strings.Builder
-//		increment := 1
-//		attribute := []interface{}{}
-//
-//		builder.WriteString(`update task set `)
-//
-//		//attribute = append(attribute, task.Done)
-//		//builder.WriteString(fmt.Sprintf(`done = $%d `, increment))
-//
-//		if task.Header != "" {
-//			increment++
-//			attribute = append(attribute, task.Header)
-//			builder.WriteString(fmt.Sprintf(`header = $%d `, increment))
-//		}
-//		if task.Description != "" {
-//
-//			increment++
-//			attribute = append(attribute, task.Description)
-//			builder.WriteString(fmt.Sprintf(`,description = $%d `, increment))
-//		}
-//		if !task.StartDate.IsZero() {
-//			increment++
-//			attribute = append(attribute, task.StartDate)
-//			builder.WriteString(fmt.Sprintf(`,created_at = $%d `, increment))
-//		}
-//
-//		increment++
-//		builder.WriteString(fmt.Sprintf(`where id = $%d returning *`, increment))
-//
-//		attribute = append(attribute, task.ID)
-//		row := t.Pool.QueryRow(ctx, builder.String(), attribute...)
-//
-//		return t.collectRow(row)
-//	}
 func (t *taskRepository) Update(ctx context.Context, task *entity.Task) (*entity.Task, error) {
 	var builder strings.Builder
 	increment := 0
@@ -150,6 +115,21 @@ func (t *taskRepository) GetByUserID(ctx context.Context, id string) ([]entity.T
 	return t.collectRows(rows)
 }
 
+func (t *taskRepository) GetByUserIDWithOffset(ctx context.Context, id string, offset int) ([]entity.Task, error) {
+	query := `select id, id_user, header, description, created_at, start_date, done from task
+				where id_user = $1
+				order by id desc
+				offset $2
+				limit 3`
+
+	rows, err := t.Pool.Query(ctx, query, id, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.collectRows(rows)
+}
+
 func (t *taskRepository) GetAll(ctx context.Context) ([]entity.Task, error) {
 	query := `select id, id_user, header, description, created_at, start_date, done from task`
 
@@ -183,7 +163,7 @@ func (t *taskRepository) GetPageByStatusAndUserID(ctx context.Context, userID st
 	return t.collectRows(rows)
 }
 
-func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, date time.Time, status bool, offset int) ([]entity.Task, error) {
+func (t *taskRepository) GetByDateAndStatusWithOffset(ctx context.Context, userID string, date time.Time, status bool, offset int) ([]entity.Task, error) {
 	query := `select id, id_user, header, description, created_at, start_date, done
 				from task
 				where id_user = $1 and done = $2 and start_date = $3
@@ -192,6 +172,19 @@ func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, 
 				limit 3`
 
 	rows, err := t.Pool.Query(ctx, query, userID, status, date, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.collectRows(rows)
+}
+
+func (t *taskRepository) GetByDateAndStatus(ctx context.Context, userID string, date time.Time, status bool) ([]entity.Task, error) {
+	query := `select id, id_user, header, description, created_at, start_date, done
+				from task
+				where id_user = $1 and done = $2 and start_date = $3`
+
+	rows, err := t.Pool.Query(ctx, query, userID, status, date)
 	if err != nil {
 		return nil, err
 	}

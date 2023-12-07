@@ -31,9 +31,3 @@ create table if not exists session(
     foreign key (user_id)
         references "user" (id) on delete cascade
 );
-
-SELECT *
-FROM task
-WHERE id_user = $3 and ((start_date = $1 AND done = $2) OR (start_date IS NULL AND done = $2))
-LIMIT 0
-OFFSET 3;

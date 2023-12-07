@@ -15,7 +15,74 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/task/add": {
+        "/tasks": {
+            "get": {
+                "description": "get user task with pagination and filter, by default without parameters return first page",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task"
+                ],
+                "summary": "Get user task with filter",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "page",
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "datetime",
+                        "description": "date and time required tasks",
+                        "name": "datetime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "format": "status",
+                        "description": "task status",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Task"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.JSONError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.JSONError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/add": {
             "post": {
                 "description": "create new user task by userID from context, return created task",
                 "consumes": [
@@ -67,7 +134,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/task/all": {
+        "/tasks/all": {
             "get": {
                 "description": "Get all users tasks, available only to the admin",
                 "consumes": [
@@ -79,7 +146,7 @@ const docTemplate = `{
                 "tags": [
                     "Task"
                 ],
-                "summary": "Get all task",
+                "summary": "Get all users task",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -111,9 +178,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/task/filter": {
+        "/tasks/list": {
             "get": {
-                "description": "Get user task with filter",
+                "description": "get user task by userID from context, you can also make a filter for time and status, return tasks",
                 "consumes": [
                     "application/json"
                 ],
@@ -123,7 +190,7 @@ const docTemplate = `{
                 "tags": [
                     "Task"
                 ],
-                "summary": "Get task",
+                "summary": "Get user task",
                 "parameters": [
                     {
                         "type": "string",
@@ -171,9 +238,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/task/list": {
-            "get": {
-                "description": "get user task by userID from context, return tasks",
+        "/tasks/{id}": {
+            "put": {
+                "description": "Update header, description, datetime, task status by userID from context, return updated task",
                 "consumes": [
                     "application/json"
                 ],
@@ -183,69 +250,30 @@ const docTemplate = `{
                 "tags": [
                     "Task"
                 ],
-                "summary": "Get user task",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Task"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    }
-                }
-            }
-        },
-        "/task/pagination": {
-            "get": {
-                "description": "Get user task with pagination by userID from context",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Task"
-                ],
-                "summary": "Get tasks",
+                "summary": "Update task",
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "page",
-                        "description": "page number",
-                        "name": "page",
-                        "in": "query"
+                        "description": "task id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     },
                     {
-                        "type": "boolean",
-                        "format": "status",
-                        "description": "task status",
-                        "name": "status",
-                        "in": "query"
+                        "description": "task attribute",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.TaskRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Task"
-                            }
+                            "$ref": "#/definitions/entity.Task"
                         }
                     },
                     "400": {
@@ -254,6 +282,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/handler.JSONError"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handler.JSONError"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -267,9 +301,7 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/task/{id}/delete": {
+            },
             "delete": {
                 "description": "delete task by id",
                 "consumes": [
@@ -316,7 +348,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/task/{id}/status": {
+        "/tasks/{id}/status": {
             "put": {
                 "description": "Set to task completed or not by userID from context, return updated task",
                 "consumes": [
@@ -344,71 +376,6 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/handler.StatusRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Task"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handler.JSONError"
-                        }
-                    }
-                }
-            }
-        },
-        "/task/{id}/update": {
-            "put": {
-                "description": "Update header, description, datetime, task status by userID from context, return updated task",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Task"
-                ],
-                "summary": "Update task",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "task id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "task attribute",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TaskRequest"
                         }
                     }
                 ],

@@ -31,14 +31,13 @@ func Router(log *logger.Logger, service Services, store *sessions.CookieStore) *
 			r.Post("/logout", user.LogoutHandler)
 		})
 		r.With(auth).Route("/tasks", func(r chi.Router) {
-			r.Get("/list", task.GetTaskHandler)
+			r.Get("/", task.GetTaskHandler)
+			r.Get("/list", task.GetUserTaskHandler)
 			r.Post("/add", task.CreateTaskHandler)
 			r.Delete("/{id}", task.DeleteTaskHandler)
 			r.Put("/{id}", task.UpdateTaskHandler)
 			r.Put("/{id}/status", task.UpdateStatusHandler)
 			r.Get("/all", task.GetAllTasksHandler)
-			//r.Get("/pagination", task.GetTaskWithPaginationHandler)
-			//r.Get("/filter", task.GetFilteredHandler)
 		})
 	})
 

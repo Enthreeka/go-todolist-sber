@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"go-todolist-sber/internal/apperror"
-	"go-todolist-sber/internal/controller/http/handler"
 	"go-todolist-sber/internal/entity"
 	"go-todolist-sber/internal/task"
 )
@@ -41,17 +40,31 @@ func (t *taskUsecase) DeleteTask(ctx context.Context, id int) error {
 	return nil
 }
 
-func (t *taskUsecase) GetUserTasks(ctx context.Context, userID string) ([]entity.Task, error) {
-	tasks, err := t.taskRepo.GetByUserID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
+func (t *taskUsecase) GetUserTasks(ctx context.Context, userID string, option *entity.ParamOption) ([]entity.Task, error) {
+	if option.Status != nil && !option.DateTime.IsZero() {
+		tasks, err := t.taskRepo.GetByDateAndStatus(ctx, userID, option.DateTime, *option.Status)
+		if err != nil {
+			return nil, err
+		}
 
-	if tasks == nil || len(tasks) == 0 {
-		return nil, apperror.ErrNoRows
-	}
+		if tasks == nil || len(tasks) == 0 {
+			return nil, apperror.ErrNoRows
+		}
 
-	return tasks, nil
+		return tasks, nil
+	} else {
+
+		tasks, err := t.taskRepo.GetByUserID(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		if tasks == nil || len(tasks) == 0 {
+			return nil, apperror.ErrNoRows
+		}
+
+		return tasks, nil
+	}
 }
 
 func (t *taskUsecase) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
@@ -66,33 +79,6 @@ func (t *taskUsecase) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 
 	return tasks, nil
 }
-
-func (t *taskUsecase) PaginationTasks(ctx context.Context, userID string, status bool, page int) ([]entity.Task, error) {
-	offset := (page - 1) * 3
-
-	tasks, err := t.taskRepo.GetPageByStatusAndUserID(ctx, userID, status, offset)
-	if err != nil {
-		return nil, err
-	}
-
-	if tasks == nil || len(tasks) == 0 {
-		return nil, apperror.ErrNoRows
-	}
-	return tasks, nil
-}
-
-//func (t *taskUsecase) GetFilteredTasks(ctx context.Context, userID string, date time.Time, status bool) ([]entity.Task, error) {
-//	tasks, err := t.taskRepo.GetByDateAndStatus(ctx, userID, date, status)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if tasks == nil || len(tasks) == 0 {
-//		return nil, apperror.ErrNoRows
-//	}
-//
-//	return tasks, nil
-//}
 
 func (t *taskUsecase) IsEqualUserID(ctx context.Context, contextUserID string, taskID int) (bool, error) {
 	data, err := t.taskRepo.GetByID(ctx, taskID)
@@ -116,14 +102,14 @@ func (t *taskUsecase) UpdateTaskStatus(ctx context.Context, status bool, taskID 
 	return task, nil
 }
 
-func (t *taskUsecase) GetTaskWithPaginationAndFilter(ctx context.Context, userID string, option *handler.ParamOption) ([]entity.Task, error) {
+func (t *taskUsecase) GetTaskWithPaginationAndFilter(ctx context.Context, userID string, option *entity.ParamOption) ([]entity.Task, error) {
 	if option.Page == 0 {
 		option.Page = 1
 	}
 
 	offset := (option.Page - 1) * 3
-	if !option.DateTime.IsZero() {
-		tasks, err := t.taskRepo.GetByDateAndStatus(ctx, userID, option.DateTime, option.Status, offset)
+	if !option.DateTime.IsZero() && option.Status != nil {
+		tasks, err := t.taskRepo.GetByDateAndStatusWithOffset(ctx, userID, option.DateTime, *option.Status, offset)
 		if err != nil {
 			return nil, err
 		}
@@ -133,8 +119,8 @@ func (t *taskUsecase) GetTaskWithPaginationAndFilter(ctx context.Context, userID
 		}
 
 		return tasks, nil
-	} else {
-		tasks, err := t.taskRepo.GetPageByStatusAndUserID(ctx, userID, option.Status, offset)
+	} else if option.Status != nil {
+		tasks, err := t.taskRepo.GetPageByStatusAndUserID(ctx, userID, *option.Status, offset)
 		if err != nil {
 			return nil, err
 		}
@@ -145,4 +131,15 @@ func (t *taskUsecase) GetTaskWithPaginationAndFilter(ctx context.Context, userID
 
 		return tasks, nil
 	}
+
+	tasks, err := t.taskRepo.GetByUserIDWithOffset(ctx, userID, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	if tasks == nil || len(tasks) == 0 {
+		return nil, apperror.ErrNoRows
+	}
+
+	return tasks, nil
 }
