@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source storage.go -destination mock/pg_repository_mock.go -package mock
 type TaskRepository interface {
 	GetByDateAndStatusWithOffset(ctx context.Context, userID string, date time.Time, status bool, offset int) ([]entity.Task, error)
 	GetByDateAndStatus(ctx context.Context, userID string, date time.Time, status bool) ([]entity.Task, error)

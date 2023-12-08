@@ -150,7 +150,3 @@ func (t *taskUsecase) GetTask(ctx context.Context, userID string, option *entity
 		return tasks, nil
 	}
 }
-
-//if tasks == nil || len(tasks) == 0 {
-//return nil, apperror.ErrNoRows
-//}
