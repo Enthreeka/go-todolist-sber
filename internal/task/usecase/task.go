@@ -40,6 +40,15 @@ func (t *taskUsecase) DeleteTask(ctx context.Context, id int) error {
 	return nil
 }
 
+func (t *taskUsecase) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
+	tasks, err := t.taskRepo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
 func (t *taskUsecase) GetUserTasks(ctx context.Context, userID string, option *entity.ParamOption) ([]entity.Task, error) {
 	if option.Status != nil && !option.DateTime.IsZero() {
 		tasks, err := t.taskRepo.GetByDateAndStatus(ctx, userID, option.DateTime, *option.Status)
@@ -65,19 +74,6 @@ func (t *taskUsecase) GetUserTasks(ctx context.Context, userID string, option *e
 
 		return tasks, nil
 	}
-}
-
-func (t *taskUsecase) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
-	tasks, err := t.taskRepo.GetAll(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if tasks == nil || len(tasks) == 0 {
-		return nil, apperror.ErrNoRows
-	}
-
-	return tasks, nil
 }
 
 func (t *taskUsecase) IsEqualUserID(ctx context.Context, contextUserID string, taskID int) (bool, error) {
@@ -127,14 +123,14 @@ func (t *taskUsecase) GetTask(ctx context.Context, userID string, option *entity
 		}
 
 		return tasks, nil
-	case !option.DateTime.IsZero() && option.Status != nil && option.Page < 0: // Без пагинации по статусу и времени
+	case !option.DateTime.IsZero() && option.Status != nil && option.Page == 0: // Без пагинации по статусу и времени
 		tasks, err := t.taskRepo.GetByDateAndStatus(ctx, userID, option.DateTime, *option.Status)
 		if err != nil {
 			return nil, err
 		}
 
 		return tasks, nil
-	case option.DateTime.IsZero() && option.Status != nil && option.Page < 0: // Без пагинации по статусу
+	case option.DateTime.IsZero() && option.Status != nil && option.Page == 0: // Без пагинации по статусу
 		tasks, err := t.taskRepo.GetByStatus(ctx, userID, *option.Status)
 		if err != nil {
 			return nil, err
