@@ -9,3 +9,6 @@ docker-down:
 
 swagger:
 	swag init -g cmd/server/main.go
+
+test:
+	go test -v ./internal/...

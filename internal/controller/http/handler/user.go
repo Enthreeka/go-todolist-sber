@@ -62,7 +62,7 @@ func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := u.sessionUsecase.CreateToken(context.Background(), user.ID)
+	sess, err := u.sessionUsecase.CreateToken(context.Background(), uuid.New().String(), user.ID)
 	if err != nil {
 		u.log.Error("sessionUsecase.CreateToken: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
@@ -107,7 +107,7 @@ func (u *userHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := u.sessionUsecase.UpdateToken(context.Background(), user.ID)
+	sess, err := u.sessionUsecase.UpdateToken(context.Background(), uuid.New().String(), user.ID)
 	if err != nil {
 		u.log.Error("sessionUsecase.UpdateToken: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
