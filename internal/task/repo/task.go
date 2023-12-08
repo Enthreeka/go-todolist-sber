@@ -69,9 +69,9 @@ func (t *taskRepository) Update(ctx context.Context, task *entity.Task) (*entity
 			if commaAdded {
 				builder.WriteString(", ")
 			}
+			increment++
 			builder.WriteString(fmt.Sprintf(`%s = $%d`, attr.name, increment))
 			attribute = append(attribute, attr.value)
-			increment++
 			commaAdded = true
 		}
 	}

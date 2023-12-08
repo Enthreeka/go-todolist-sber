@@ -40,10 +40,10 @@ func Run(log *logger.Logger, cfg *config.Config) error {
 	}
 
 	server := http.NewServer(log, http.Services{Task: taskUsecase, User: userUsecase, Session: sessionUsecase}, http.ServerOption{
-		Addr: fmt.Sprintf("%s:%s", cfg.HTTTPServer.Hostname, cfg.HTTTPServer.Port),
+		Addr: fmt.Sprintf(":%s", cfg.HTTTPServer.Port),
 	}, store)
 
-	log.Info("Starting http server on %s: %s%s", cfg.HTTTPServer.TypeServer, cfg.HTTTPServer.Hostname, cfg.HTTTPServer.Port)
+	log.Info("Starting http server on %s: %s:%s", cfg.HTTTPServer.TypeServer, cfg.HTTTPServer.Hostname, cfg.HTTTPServer.Port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("listen: %s", err)
 	}
