@@ -8,6 +8,11 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+type Argon interface {
+	GenerateHashFromPassword(password string) (string, error)
+	VerifyPassword(hashPassword string, password string) error
+}
+
 type argon struct {
 	salt    []byte
 	version int
@@ -17,7 +22,7 @@ type argon struct {
 	keyLen  uint32
 }
 
-func NewArgonPassword(salt string) *argon {
+func NewArgonPassword(salt string) Argon {
 	return &argon{
 		salt:    []byte(salt),
 		time:    1,

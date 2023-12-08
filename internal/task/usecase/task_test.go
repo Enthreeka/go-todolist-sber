@@ -96,40 +96,65 @@ func TestTaskUsecase_DeleteTask(t *testing.T) {
 func TestTaskUsecase_UpdateTask(t *testing.T) {
 	t.Parallel()
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockTaskRepo := mock.NewMockTaskRepository(ctrl)
-
-	taskUsecase := NewTaskUsecase(mockTaskRepo)
-
-	userID := uuid.New().String()
-
-	task := &entity.Task{
-		ID:          1,
-		UserID:      userID,
-		Header:      "Update Header",
-		Description: "Description",
-		CreatedAt:   time.Now(),
+	type mockBehavior func(r *mock.MockTaskRepository, task *entity.Task)
+	type args struct {
+		task *entity.Task
 	}
 
-	newTask := &entity.Task{
-		ID:          1,
-		UserID:      userID,
-		Header:      "Update Header",
-		Description: "Description",
-		CreatedAt:   time.Now(),
-		StartDate:   time.Now().Add(1 * time.Hour),
+	tests := []struct {
+		name string
+		args
+		mockBehavior
+		want    *entity.Task
+		wantErr error
+	}{
+		{
+			name: "ok",
+			args: args{
+				task: &entity.Task{
+					ID:          1,
+					UserID:      "uuid",
+					Header:      "Update Header",
+					Description: "Description",
+					CreatedAt:   time.Now(),
+				},
+			},
+			mockBehavior: func(m *mock.MockTaskRepository, task *entity.Task) {
+				m.EXPECT().Update(context.Background(), gomock.Eq(task)).Return(task, nil)
+			},
+			want:    &entity.Task{ID: 1, UserID: "uuid", Header: "Update Header", Description: "Description", CreatedAt: time.Now()},
+			wantErr: nil,
+		},
+		{
+			name: "Not found",
+			args: args{
+				task: &entity.Task{
+					ID:          2,
+					UserID:      uuid.New().String(),
+					Header:      "Update Header 2",
+					Description: "Description 2",
+					CreatedAt:   time.Now(),
+				},
+			},
+			mockBehavior: func(m *mock.MockTaskRepository, task *entity.Task) {
+				m.EXPECT().Update(context.Background(), gomock.Eq(task)).Return(nil, apperror.ErrNoRows)
+			},
+			want:    nil,
+			wantErr: apperror.ErrNoRows,
+		},
 	}
 
-	ctx := context.Background()
-
-	mockTaskRepo.EXPECT().Update(ctx, gomock.Eq(task)).Return(newTask, nil)
-
-	updatedTask, err := taskUsecase.UpdateTask(ctx, task)
-	require.NoError(t, err)
-	require.Nil(t, err)
-	require.NotNil(t, updatedTask)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			mockTaskRepo := mock.NewMockTaskRepository(ctrl)
+			tt.mockBehavior(mockTaskRepo, tt.task)
+			taskUsecase := NewTaskUsecase(mockTaskRepo)
+			updatedTask, err := taskUsecase.UpdateTask(context.Background(), tt.task)
+			assert.Equal(t, tt.wantErr, err)
+			assert.Equal(t, tt.want, updatedTask)
+		})
+	}
 }
 
 func TestTaskUsecase_GetUserTasks(t *testing.T) {
@@ -172,21 +197,55 @@ func TestTaskUsecase_GetAllTasks(t *testing.T) {
 func TestTaskUsecase_IsEqualUserID(t *testing.T) {
 	t.Parallel()
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	type mockBehavior func(r *mock.MockTaskRepository, contextUserID string, taskID int)
+	type args struct {
+		contextUserID string
+		taskID        int
+	}
+	tests := []struct {
+		name string
+		args
+		mockBehavior
+		want    bool
+		wantErr error
+	}{
+		{
+			name: "ok",
+			args: args{
+				contextUserID: "uuid",
+				taskID:        5,
+			},
+			mockBehavior: func(m *mock.MockTaskRepository, contextUserID string, taskID int) {
+				m.EXPECT().GetByID(context.Background(), gomock.Eq(taskID)).Return(&entity.Task{UserID: contextUserID}, nil)
+			},
+			want:    true,
+			wantErr: nil,
+		},
+		{
+			name: "Not found",
+			args: args{
+				contextUserID: "uuid",
+				taskID:        5,
+			},
+			mockBehavior: func(m *mock.MockTaskRepository, contextUserID string, taskID int) {
+				m.EXPECT().GetByID(context.Background(), gomock.Eq(taskID)).Return(nil, apperror.ErrNoRows)
+			},
+			want:    false,
+			wantErr: apperror.ErrNoRows,
+		},
+	}
 
-	mockTaskRepo := mock.NewMockTaskRepository(ctrl)
-
-	taskUsecase := NewTaskUsecase(mockTaskRepo)
-
-	contextUserID := "user1"
-	taskID := 1
-
-	mockTaskRepo.EXPECT().GetByID(gomock.Any(), gomock.Eq(taskID)).Return(&entity.Task{UserID: contextUserID}, nil)
-
-	result, err := taskUsecase.IsEqualUserID(context.Background(), contextUserID, taskID)
-	require.NoError(t, err)
-	require.True(t, result)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			mockTaskRepo := mock.NewMockTaskRepository(ctrl)
+			tt.mockBehavior(mockTaskRepo, tt.contextUserID, tt.taskID)
+			taskUsecase := NewTaskUsecase(mockTaskRepo)
+			equal, err := taskUsecase.IsEqualUserID(context.Background(), tt.contextUserID, tt.taskID)
+			assert.Equal(t, tt.wantErr, err)
+			assert.Equal(t, tt.want, equal)
+		})
+	}
 }
 
 func TestTaskUsecase_UpdateTaskStatus(t *testing.T) {
@@ -209,25 +268,113 @@ func TestTaskUsecase_UpdateTaskStatus(t *testing.T) {
 	require.NotNil(t, updatedTask)
 }
 
+//func TestTaskUsecase_GetTask(t *testing.T) {
+//	t.Parallel()
+//
+//	type mockBehavior func(r *mock.MockTaskRepository, param ...any)
+//	type args struct {
+//		userID string
+//		option *entity.ParamOption
+//	}
+//	tests := []struct {
+//		name string
+//		args
+//		mockBehavior
+//		want    []entity.Task
+//		wantErr error
+//	}{
+//		{
+//			name: "ok",
+//			args: args{userID: "uuid", option: &entity.ParamOption{Page: 0, Status: &[]bool{true}[0], DateTime: time.Now()}},
+//			mockBehavior: func(m *mock.MockTaskRepository, param ...any) {
+//				m.EXPECT().GetByDateAndStatus(context.Background(), userID, date, status).Return()
+//			},
+//		},
+//	}
+
+//t.Parallel()
+//
+//ctrl := gomock.NewController(t)
+//defer ctrl.Finish()
+//
+//mockTaskRepo := mock.NewMockTaskRepository(ctrl)
+//
+//taskUsecase := NewTaskUsecase(mockTaskRepo)
+//
+//userID := uuid.New().String()
+//option := &entity.ParamOption{
+//	Page: 1,
+//}
+//
+//offset := (option.Page - 1) * 3
+//mockTaskRepo.EXPECT().GetByUserIDWithOffset(gomock.Any(), gomock.Eq(userID), gomock.Eq(offset)).Return([]entity.Task{}, nil)
+//
+//tasks, err := taskUsecase.GetTask(context.Background(), userID, option)
+//require.NoError(t, err)
+//require.NotNil(t, tasks)
+//}
+
 func TestTaskUsecase_GetTask(t *testing.T) {
 	t.Parallel()
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockTaskRepo := mock.NewMockTaskRepository(ctrl)
-
-	taskUsecase := NewTaskUsecase(mockTaskRepo)
-
-	userID := uuid.New().String()
-	option := &entity.ParamOption{
-		Page: 1,
+	type mockBehavior func(r *mock.MockTaskRepository, userID string, date time.Time, status bool, page int)
+	type args struct {
+		userID string
+		option *entity.ParamOption
+	}
+	tests := []struct {
+		name         string
+		args         args
+		mockBehavior mockBehavior
+		want         []entity.Task
+		wantErr      error
+	}{
+		{
+			name: "ok",
+			args: args{
+				userID: "uuid",
+				option: &entity.ParamOption{
+					Page:     0,
+					Status:   &[]bool{true}[0],
+					DateTime: time.Now(),
+				},
+			},
+			mockBehavior: func(m *mock.MockTaskRepository, userID string, date time.Time, status bool, page int) {
+				//m.EXPECT().GetByDateAndStatus(context.Background(), gomock.Eq(userID), gomock.Eq(date), gomock.Eq(status)).Return([]entity.Task{}, nil)
+				m.EXPECT().GetByUserID(context.Background(), gomock.Eq(userID)).Return([]entity.Task{}, nil)
+			},
+			want:    []entity.Task{},
+			wantErr: nil,
+		},
+		{
+			name: "ok with pagination and filter",
+			args: args{
+				userID: "uuid",
+				option: &entity.ParamOption{
+					Page:     1,
+					Status:   &[]bool{true}[0],
+					DateTime: time.Now(),
+				},
+			},
+			mockBehavior: func(m *mock.MockTaskRepository, userID string, date time.Time, status bool, page int) {
+				m.EXPECT().GetByDateAndStatusWithOffset(context.Background(), userID, date, status, page).Return([]entity.Task{}, nil)
+			},
+			want:    []entity.Task{},
+			wantErr: nil,
+		},
 	}
 
-	offset := (option.Page - 1) * 3
-	mockTaskRepo.EXPECT().GetByUserIDWithOffset(gomock.Any(), gomock.Eq(userID), gomock.Eq(offset)).Return([]entity.Task{}, nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			mockTaskRepo := mock.NewMockTaskRepository(ctrl)
+			tt.mockBehavior(mockTaskRepo, tt.args.userID, tt.args.option.DateTime, *tt.args.option.Status, tt.args.option.Page)
 
-	tasks, err := taskUsecase.GetTask(context.Background(), userID, option)
-	require.NoError(t, err)
-	require.NotNil(t, tasks)
+			taskUsecase := NewTaskUsecase(mockTaskRepo)
+			tasks, err := taskUsecase.GetTask(context.Background(), tt.args.userID, tt.args.option)
+
+			assert.Equal(t, tt.wantErr, err)
+			assert.Equal(t, tt.want, tasks)
+		})
+	}
 }

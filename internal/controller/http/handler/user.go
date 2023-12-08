@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"go-todolist-sber/internal/apperror"
 	"go-todolist-sber/internal/session"
@@ -54,7 +55,7 @@ func (u *userHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.userUsecase.Register(context.Background(), data.Login, data.Password)
+	user, err := u.userUsecase.Register(context.Background(), uuid.New().String(), data.Login, data.Password)
 	if err != nil {
 		u.log.Error("userUsecase.Register: %v", err)
 		HandleError(w, err, apperror.ParseHTTPErrStatusCode(err))
